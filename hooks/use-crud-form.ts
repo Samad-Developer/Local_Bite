@@ -16,12 +16,8 @@ interface UseCrudFormOptions<TRecord, TFormData extends FieldValues> {
   getId: (record: TRecord) => string;
 
   // server action for create and update
-  createAction: (
-    data: TFormData,
-  ) => Promise<{ success?: boolean; error?: string }>;
-  updateAction: (
-    data: TFormData & { id: string },
-  ) => Promise<{ success?: boolean; error?: string }>;
+  createAction: (data: TFormData) => Promise<{ success?: boolean; error?: string }>;
+  updateAction: (data: TFormData & { id: string }) => Promise<{ success?: boolean; error?: string }>;
 }
 
 export function useCrudForm<TRecord, TFormData extends FieldValues>({

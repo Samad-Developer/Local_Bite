@@ -19,7 +19,7 @@ interface ModalProps {
   isEditing: boolean;
   size?: "sm" | "md" | "lg";
   // ── new props for form mode ──
-  formId?: string;
+  formId: string;
   onSubmit?: () => void;
 }
 
@@ -77,7 +77,7 @@ export function AppModal({
               type="submit"
               size="lg"
               variant="default"
-              form="category-form"
+              form={formId}
               disabled={isPending}
               className=""
             >

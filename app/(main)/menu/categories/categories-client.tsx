@@ -18,7 +18,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
-} from "@/lib/actions/categories";
+} from "@/lib/actions/categories/categories";
 import { FormRenderer } from "@/components/shared/form/FormRenderer";
 import { DeleteModal } from "@/components/shared/DeleteModal";
 

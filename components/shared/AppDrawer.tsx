@@ -1,4 +1,4 @@
-import { ReactNode } from "react"
+import { ReactNode } from "react";
 import {
   Sheet,
   SheetContent,
@@ -6,24 +6,23 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from "@/components/ui/sheet"
-import { Button } from "../ui/button"
+} from "@/components/ui/sheet";
+import { Button } from "../ui/button";
 
 interface DrawerProps {
-  open: boolean
-  onClose: () => void
-  title: string
-  description?: string
-  children: ReactNode
-  side?: "left" | "right"
-  size?: "sm" | "md" | "lg"
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  description?: string;
+  children: ReactNode;
+  isPending: boolean;
+  isEditing: boolean;
+  onSubmit: () => void;
+  side?: "left" | "right";
+  size?: "sm" | "md" | "lg";
+  formId: string;
 }
 
-const sizeMap = {
-  sm: "sm:max-w-sm",
-  md: "sm:max-w-lg",
-  lg: "sm:max-w-4xl",
-}
 
 export default function AppDrawer({
   open,
@@ -31,21 +30,18 @@ export default function AppDrawer({
   title,
   description,
   children,
+  isPending,
+  isEditing,
+  onSubmit,
   side = "right",
   size = "lg",
+  formId,
 }: DrawerProps) {
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent
-        side={side}
-        className={`
-          bg-white border-l border-[#e5e7eb]
-          flex flex-col p-0
-          ${sizeMap[size]}
-        `}
-      >
+      <SheetContent side={side}>
         {/* Header */}
-        <SheetHeader className="px-6 py-4 border-b border-[#f3f4f6] flex-shrink-0">
+        <SheetHeader className="px-6 py-4 border-b border-[#f3f4f6]">
           <SheetTitle className="text-lg font-semibold text-[#111111]">
             {title}
           </SheetTitle>
@@ -56,16 +52,39 @@ export default function AppDrawer({
           )}
         </SheetHeader>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          {children}
-        </div>
+        {/* if formId + onSubmit provided → wrap body in a form */}
+        {formId && onSubmit ? (
+          <form id={formId} onSubmit={onSubmit}>
+            <div className="px-4">
+            {children}
+            </div>
+          </form>
+        ) : (
+          children
+        )}
 
-          <SheetFooter>
-            <Button>Submit</Button>
-            <Button>Cancel</Button>
-          </SheetFooter>
+        <SheetFooter>
+          <Button size="lg" variant="outline" className="" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            size="lg"
+            variant="default"
+            form={formId}
+            disabled={isPending}
+            className=""
+          >
+            {isPending
+              ? isEditing
+                ? "Saving..."
+                : "Creating..."
+              : isEditing
+                ? "Save Changes"
+                : "Create"}
+          </Button>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

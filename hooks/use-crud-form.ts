@@ -64,6 +64,7 @@ export function useCrudForm<TRecord, TFormData extends FieldValues>({
 
   function onSubmit(data: TFormData) {
     setServerError("");
+    console.log("is on submit is calling")
     startTransition(async () => {
       const result = record
         ? await updateAction({ ...data, id: getId(record) })

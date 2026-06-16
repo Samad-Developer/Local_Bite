@@ -31,6 +31,7 @@ interface FormRendererProps {
 // Usage:
 //   <FormRenderer fields={categoryFields} control={form.control} />
 // ─────────────────────────────────────────────────────────────
+
 export function FormRenderer({ fields, control, className }: FormRendererProps) {
   return (
     <div className={`flex flex-col gap-5 ${className ?? ""}`}>

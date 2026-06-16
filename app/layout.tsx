@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin"
+import { extractRouterConfig } from "uploadthing/server"
+import { ourFileRouter } from "@/lib/uploadthing"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -32,6 +35,9 @@ export default async function RootLayout({
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
     >
       <body className="min-h-full flex flex-col overflow-hidden h-screen">
+        <NextSSRPlugin
+          routerConfig={extractRouterConfig(ourFileRouter)}
+        />
         <main className="flex-1 overflow-y-auto bg-[#f5f5f5]">
           {children}
         </main>

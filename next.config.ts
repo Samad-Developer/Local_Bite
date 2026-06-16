@@ -5,7 +5,15 @@ const nextConfig: NextConfig = {
   typedRoutes: false,
   experimental: {
     globalNotFound: true,
-  }
+  },
+   images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "utfs.io",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

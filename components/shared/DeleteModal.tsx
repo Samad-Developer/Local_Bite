@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { Spinner } from "../ui/spinner";
 
 interface DeleteModalProps {
   open: boolean;
@@ -53,7 +54,12 @@ export function DeleteModal({
             disabled={isPending}
             className="flex-1 bg-[#dc2626] hover:bg-[#b91c1c] text-white"
           >
-            {isPending ? "Deleting..." : "Delete"}
+            {isPending ? (
+              <>
+                <Spinner />
+                Deleting...
+              </>
+            ) : "Delete"}
           </Button>
         </DialogFooter>
       </DialogContent>

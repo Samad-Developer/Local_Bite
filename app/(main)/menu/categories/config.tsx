@@ -122,7 +122,7 @@ export const categoryColumns = (
     cell: ({ row }) => (
       <div className="flex items-center justify-end gap-1">
         <Button
-          variant="ghost"
+          variant="secondary"
           size="icon"
           className="h-8 w-8 bg-transparent text-[#9ca3af] hover:text-[#111111]"
           onClick={() => onEdit(row.original)}
@@ -132,7 +132,7 @@ export const categoryColumns = (
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 bg-transparent text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fef2f2]"
+          className="h-8 w-8 bg-transparent text-[#dc2626] hover:bg-[#fef2f2]"
           onClick={() => onDelete(row.original)}
         >
           <Trash2 className="w-4 h-4" />

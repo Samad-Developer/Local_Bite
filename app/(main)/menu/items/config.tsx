@@ -67,7 +67,7 @@ export const menuItemDefaultValues: MenuItemFormData = {
   imageUrls: [],
 };
 
-// ── Fields Config ──────────────────────────────────
+// ──Form Fields Config ──────────────────────────────────
 
 export const menuItemFields = (categories: Category[]): FieldConfig[] => [
   {
@@ -131,7 +131,7 @@ export const menuItemColumns = (
 
       return (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg overflow-hidden border border-[#e5e7eb] flex-shrink-0 bg-[#f9fafb]">
+          <div className="w-12 h-12 rounded-lg overflow-hidden border border-[#e5e7eb] flex-shrink-0 bg-[#f9fafb]">
             {image ? (
               <Image
                 src={image}

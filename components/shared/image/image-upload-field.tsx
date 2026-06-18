@@ -1,13 +1,14 @@
-"use client"
+"use client";
 
-import { X } from "lucide-react"
-import Image from "next/image"
-import { UploadButton } from "@/lib/uploadthing-client"
+import { X } from "lucide-react";
+import Image from "next/image";
+import { UploadButton } from "@/lib/uploadthing-client";
+import { twMerge } from "tailwind-merge";
 
 interface ImageUploadFieldProps {
-  value: string[]
-  onChange: (urls: string[]) => void
-  maxImages?: number
+  value: string[];
+  onChange: (urls: string[]) => void;
+  maxImages?: number;
 }
 
 export function ImageUploadField({
@@ -16,7 +17,7 @@ export function ImageUploadField({
   maxImages = 4,
 }: ImageUploadFieldProps) {
   function removeImage(url: string) {
-    onChange(value.filter((u) => u !== url))
+    onChange(value.filter((u) => u !== url));
   }
 
   return (
@@ -66,17 +67,17 @@ export function ImageUploadField({
           // types file) if needed.
           endpoint="menuItemImage"
           onClientUploadComplete={(res) => {
-            const newUrls = res.map((r) => r.url)
-            onChange([...value, ...newUrls].slice(0, maxImages))
+            const newUrls = res.map((r) => r.url);
+            onChange([...value, ...newUrls].slice(0, maxImages));
           }}
           onUploadError={(error) => console.error("Upload error:", error)}
+          config={{ cn: twMerge }}
           appearance={{
             button:
-              "border-dashed text-black border-[#e5e7eb] hover:bg-[#f9f9f9] text-sm h-10 px-4 rounded-lg shadow-sm w-full",
-            allowedContent: " text-xs mt-1",
+              "text-black border border-dashed border-gray-400 hover:bg-gray-100 transition rounded-md h-16 px-4 w-full",
           }}
         />
       )}
     </div>
-  )
+  );
 }

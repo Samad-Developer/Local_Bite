@@ -94,6 +94,7 @@ export async function createMenuItem(data: {
 
 export async function updateMenuItem(
   data: {
+    id: string
     name: string
     description?: string
     basePrice: number
@@ -102,7 +103,7 @@ export async function updateMenuItem(
     isNew: boolean
     isAvailable: boolean
     imageUrls: string[]
-  } & { id: string }
+  }
 ) {
   const session = await auth()
   if (!session) return { error: "Not authenticated" }

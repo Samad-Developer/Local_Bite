@@ -8,6 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
+import { Spinner } from "../ui/spinner";
 
 interface ModalProps {
   open: boolean;
@@ -70,25 +71,26 @@ export function AppModal({
         )}
 
         <DialogFooter>
-            <Button size="lg" variant="outline" className="" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="lg"
-              variant="default"
-              form={formId}
-              disabled={isPending}
-              className=""
-            >
-              {isPending
-                ? isEditing
-                  ? "Saving..."
-                  : "Creating..."
-                : isEditing
-                  ? "Save Changes"
-                  : "Create"}
-            </Button>
+          <Button size="lg" variant="outline" className="" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            size="lg"
+            variant="default"
+            form={formId}
+            disabled={isPending}
+            className=""
+          >
+            {isPending ? (
+              <>
+                <Spinner />
+                {isEditing ? "Saving..." : "Creating..."}
+              </>
+            ) :  (
+             isEditing ? "Save Changes" : "Create"
+            )}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -23,7 +23,6 @@ interface DrawerProps {
   formId: string;
 }
 
-
 export default function AppDrawer({
   open,
   onClose,

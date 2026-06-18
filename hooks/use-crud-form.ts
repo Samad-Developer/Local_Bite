@@ -49,9 +49,7 @@ export function useCrudForm<TRecord, TFormData extends FieldValues>({
   function handleEdit(row: TRecord) {
     setRecord(row);
     setServerError("");
-    const values = toFormValues
-      ? toFormValues(row)
-      : (row as unknown as TFormData);
+    const values = toFormValues ? toFormValues(row) : (row as unknown as TFormData);
     form.reset(values as DefaultValues<TFormData>);
     setModalOpen(true);
   }
@@ -64,7 +62,6 @@ export function useCrudForm<TRecord, TFormData extends FieldValues>({
 
   function onSubmit(data: TFormData) {
     setServerError("");
-    console.log("is on submit is calling")
     startTransition(async () => {
       const result = record
         ? await updateAction({ ...data, id: getId(record) })

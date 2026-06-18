@@ -1,24 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import { Control } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { AppModal } from "@/components/shared/AppModal";
+import { useCrudForm } from "@/hooks/use-crud-form";
+import AppDrawer from "@/components/shared/AppDrawer";
 import PageHeader from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
 import { FormRenderer } from "@/components/shared/form/FormRenderer";
-import { DeleteModal } from "@/components/shared/DeleteModal";
 import { ImageUploadField } from "@/components/shared/image/image-upload-field";
-import { useCrudForm } from "@/hooks/use-crud-form";
-// import { useDeleteConfirm } from "@/hooks/use-delete-confirm"
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   menuItemSchema,
   menuItemDefaultValues,
@@ -33,7 +21,6 @@ import {
   updateMenuItem,
   deleteMenuItem,
 } from "@/lib/actions/items/Items";
-import AppDrawer from "@/components/shared/AppDrawer";
 
 export default function MenuItemsClient({
   menuItems,
@@ -42,12 +29,6 @@ export default function MenuItemsClient({
   menuItems: MenuItem[];
   categories: Category[];
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const [, startNavTransition] = useTransition();
-
   const {
     form,
     modalOpen,
@@ -76,18 +57,6 @@ export default function MenuItemsClient({
     updateAction: updateMenuItem,
   });
 
-  //   const {
-  //     deleteTarget,
-  //     deleteError,
-  //     isDeleting,
-  //     handleDeleteClick,
-  //     handleClose: handleDeleteClose,
-  //     handleConfirm: handleDeleteConfirm,
-  //   } = useDeleteConfirm<MenuItem>({
-  //     deleteAction: deleteMenuItem,
-  //     getId: (row) => row.id,
-  //   })
-
   const handleDeleteClick = () => {};
 
   return (
@@ -97,12 +66,6 @@ export default function MenuItemsClient({
         buttonLabel="Add Item"
         onButtonClick={handleCreate}
       />
-
-      {/* {deleteError && (
-        <div className="bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3 mb-4">
-          <p className="text-sm text-[#dc2626]">{deleteError}</p>
-        </div>
-      )} */}
 
       <DataTable
         columns={menuItemColumns(handleEdit, handleDeleteClick)}
@@ -140,15 +103,6 @@ export default function MenuItemsClient({
           )}
         </div>
       </AppDrawer>
-
-      {/* Delete Confirmation */}
-      {/* <DeleteModal
-        open={deleteTarget !== null}
-        onClose={handleDeleteClose}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Menu Item"
-        isPending={isDeleting}
-      /> */}
     </>
   );
 }

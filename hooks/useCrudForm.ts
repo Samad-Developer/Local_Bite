@@ -9,6 +9,8 @@ interface UseCrudFormOptions<TRecord, TFormData extends FieldValues> {
   schema: ZodSchema<TFormData>;
   defaultValues: TFormData;
 
+  initialRecord?: TRecord;
+
   // converts a table row into form values when editing
   toFormValues?: (record: TRecord) => TFormData;
 
@@ -23,19 +25,24 @@ interface UseCrudFormOptions<TRecord, TFormData extends FieldValues> {
 export function useCrudForm<TRecord, TFormData extends FieldValues>({
   schema,
   defaultValues,
+  initialRecord,
   toFormValues,
   getId,
   createAction,
   updateAction,
 }: UseCrudFormOptions<TRecord, TFormData>) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [record, setRecord] = useState<TRecord | null>(null);
+  const [record, setRecord] = useState<TRecord | null>(initialRecord ?? null);
   const [serverError, setServerError] = useState("");
   const [isPending, startTransition] = useTransition();
 
+  const resolvedDefaults = initialRecord && toFormValues
+    ? toFormValues(initialRecord)
+    : defaultValues;
+
   const form = useForm<TFormData>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues as DefaultValues<TFormData>,
+    defaultValues: resolvedDefaults as DefaultValues<TFormData>,
     mode: "onSubmit",
   });
 

@@ -74,5 +74,8 @@ export async function deleteCategory(id: string) {
 
   await prisma.category.delete({ where: { id } })
   revalidatePath("/menu/categories")
-  return { success: true }
+  return { 
+    success: true,
+    message: "Category Deleted Successfully"
+  }
 }

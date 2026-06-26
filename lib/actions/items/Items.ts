@@ -3,6 +3,39 @@
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+
+export async function getMenuItemById(id: string) {
+  const session = await auth()
+  if (!session) return null
+
+  const menuItem = await prisma.menuItem.findFirst({
+    where: {
+      id,
+      restaurantId: session.user.restaurantId,
+    },
+    include: {
+      category: true,
+      images: { orderBy: { sortOrder: "asc" } },
+      discounts: {
+        include: {
+          discount: true,
+        },
+        where: {
+          discount: {
+            isActive: true,
+            OR: [
+              { endDate: null },
+              { endDate: { gte: new Date() } },
+            ],
+          },
+        },
+      },
+    },
+  })
+
+  return menuItem;
+}
 
 export async function getMenuItems({
   search,
@@ -89,7 +122,7 @@ export async function createMenuItem(data: {
   })
 
   revalidatePath("/menu/items")
-  return { success: true }
+  redirect("/menu/items")
 }
 
 export async function updateMenuItem(
@@ -137,7 +170,7 @@ export async function updateMenuItem(
   })
 
   revalidatePath("/menu/items")
-  return { success: true }
+  redirect("/menu/items")
 }
 
 export async function deleteMenuItem(id: string) {
@@ -146,7 +179,7 @@ export async function deleteMenuItem(id: string) {
 
   await prisma.menuItem.delete({ where: { id } })
   revalidatePath("/menu/items")
-  return { success: true }
+  return { success: true, message: "Item Deleted Successfully" }
 }
 
 export async function toggleItemAvailability(

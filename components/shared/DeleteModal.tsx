@@ -41,18 +41,18 @@ export function DeleteModal({
           <p className="text-sm text-[#6b7280] pt-2">{description}</p>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="">
           <Button
             variant="outline"
             onClick={onClose}
-            className="flex-1 border-[#e5e7eb] text-[#6b7280] hover:bg-[#f9f9f9]"
+            className="border-[#e5e7eb] text-[#6b7280] hover:bg-[#f9f9f9]"
           >
             Cancel
           </Button>
           <Button
             onClick={onConfirm}
             disabled={isPending}
-            className="flex-1 bg-[#dc2626] hover:bg-[#b91c1c] text-white"
+            className="bg-[#dc2626] hover:bg-[#b91c1c] text-white"
           >
             {isPending ? (
               <>

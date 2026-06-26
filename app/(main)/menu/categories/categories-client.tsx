@@ -2,7 +2,7 @@
 
 import { Control } from "react-hook-form";
 import { useState, useTransition } from "react";
-import { useCrudForm } from "@/hooks/use-crud-form";
+import { useCrudForm } from "@/hooks/useCrudForm";
 import { AppModal } from "@/components/shared/AppModal";
 import PageHeader from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
@@ -21,18 +21,12 @@ import {
 } from "@/lib/actions/categories/categories";
 import { FormRenderer } from "@/components/shared/form/FormRenderer";
 import { DeleteModal } from "@/components/shared/DeleteModal";
+import { useDelete } from "@/hooks/useDelete";
 
-export default function CategoriesClient({
-  categories,
-}: {
+export default function CategoriesClient({ categories }: {
   categories: Category[];
 }) {
-  // delete states
-  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
-  const [deleteError, setDeleteError] = useState("");
-  const [isDeleting, startDeleteTransition] = useTransition();
 
-  // reusable form hook which handle form related things and create, update, submit handlers 
   const {
     form,
     modalOpen,
@@ -56,16 +50,16 @@ export default function CategoriesClient({
     updateAction: updateCategory,
   });
 
-  function handleDeleteConfirm() {
-    if (!deleteTarget) return;
-    startDeleteTransition(async () => {
-      const result = await deleteCategory(deleteTarget.id);
-      if (result?.error) {
-        setDeleteError(result.error);
-      }
-      setDeleteTarget(null);
-    });
-  }
+  const {
+    isDeleting,
+    deleteTarget,
+    closeDeleteModal,
+    handleDeleteConfirm,
+    handleDeleteClick
+  } = useDelete<Category>({
+    deleteAction: deleteCategory,
+    getId: ((row) => row.id)
+  })
 
   return (
     <>
@@ -75,14 +69,8 @@ export default function CategoriesClient({
         onButtonClick={handleCreate}
       />
 
-      {deleteError && (
-        <div className="bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3 mb-4">
-          <p className="text-sm text-[#dc2626]">{deleteError}</p>
-        </div>
-      )}
-
       <DataTable
-        columns={categoryColumns(handleEdit, (row) => setDeleteTarget(row))}
+        columns={categoryColumns(handleEdit, handleDeleteClick)}
         data={categories}
         searchKey="name"
         searchPlaceholder="Search categories..."
@@ -113,7 +101,7 @@ export default function CategoriesClient({
       {/* Delete Confirmation Modal */}
       <DeleteModal
         open={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
+        onClose={closeDeleteModal}
         onConfirm={handleDeleteConfirm}
         title="Delete Category"
         isPending={isDeleting}

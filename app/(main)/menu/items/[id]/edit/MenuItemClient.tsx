@@ -18,39 +18,42 @@ import { Spinner } from "@/components/ui/spinner";
 
 interface MenuItemClientProps {
   categories: Category[];
-  item?: MenuItem,
+  item?: MenuItem;
 }
 
 export const MenuItemClient = ({ categories, item }: MenuItemClientProps) => {
-  const { form, serverError, isPending, onSubmit, handleEdit, isEditing } = useCrudForm<
-    MenuItem,
-    MenuItemFormData
-  >({
-    schema: menuItemSchema,
-    defaultValues: menuItemDefaultValues,
-    initialRecord: item,
-    toFormValues: (row) => ({
-      name: row.name,
-      description: row.description ?? "",
-      basePrice: row.basePrice,
-      categoryId: row.categoryId,
-      isBestseller: row.isBestseller,
-      isNew: row.isNew,
-      isAvailable: row.isAvailable,
-      imageUrls: row.images.map((img) => img.url),
-    }),
-    getId: (row) => row.id,
-    createAction: createMenuItem,
-    updateAction: updateMenuItem,
-  });
+  
+  const { form, serverError, isPending, onSubmit, handleEdit, isEditing } =
+    useCrudForm<MenuItem, MenuItemFormData>({
+      schema: menuItemSchema,
+      defaultValues: menuItemDefaultValues,
+      initialRecord: item,
+      toFormValues: (row) => ({
+        name: row.name,
+        description: row.description ?? "",
+        basePrice: row.basePrice,
+        categoryId: row.categoryId,
+        isBestseller: row.isBestseller,
+        isNew: row.isNew,
+        sortOrder: row.sortOrder,
+        isAvailable: row.isAvailable,
+        imageUrls: row.images.map((img) => img.url),
+      }),
+      getId: (row) => row.id,
+      createAction: createMenuItem,
+      updateAction: updateMenuItem,
+    });
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
       <div className="space-y-4 max-w-4xl mx-auto">
+        <h1 className="text-2xl font-semibold text-[#111111] mb-4">
+          {isEditing ? "Edit Product" : "Create Product"}
+        </h1>
         <FormRenderer
           fields={menuItemFields(categories)}
           control={form.control as Control<any>}
-          className="grid grid-col-2"
+          className="grid grid-cols-2 gap-5"
         />
 
         <ImageUploadField
@@ -65,22 +68,23 @@ export const MenuItemClient = ({ categories, item }: MenuItemClientProps) => {
         )}
 
         <Button
-            type="submit"
-            size="lg"
-            variant="default"
-            disabled={isPending}
-            className="w-full"
-          >
-            {isPending ? (
-              <>
-                <Spinner />
-                {isEditing ? "Saving..." : "Creating..."}
-              </>
-            ) :  (
-             isEditing ? "Save Changes" : "Create"
-            )}
-          </Button>
-
+          type="submit"
+          size="lg"
+          variant="default"
+          disabled={isPending}
+          className="w-full"
+        >
+          {isPending ? (
+            <>
+              <Spinner />
+              {isEditing ? "Saving..." : "Creating..."}
+            </>
+          ) : isEditing ? (
+            "Save Changes"
+          ) : (
+            "Create"
+          )}
+        </Button>
       </div>
     </form>
   );

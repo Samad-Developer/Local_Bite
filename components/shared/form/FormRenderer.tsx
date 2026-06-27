@@ -34,7 +34,7 @@ interface FormRendererProps {
 
 export function FormRenderer({ fields, control, className }: FormRendererProps) {
   return (
-    <div className={`flex flex-col gap-5 ${className ?? ""}`}>
+    <div className={`${className ?? ""}`}>
       {fields.map((field) => (
         <Controller
           key={field.name}
@@ -81,14 +81,14 @@ export function FormRenderer({ fields, control, className }: FormRendererProps) 
             // ── Textarea ────────────────────────────────────
             if (field.type === "textarea") {
               return (
-                <Field data-invalid={fieldState.invalid}>
+                <Field data-invalid={fieldState.invalid} className={field.className}>
                   <FieldLabel htmlFor={f.name}>{field.label}</FieldLabel>
                   <Textarea
                     {...f}
                     id={f.name}
                     aria-invalid={fieldState.invalid}
                     placeholder={field.placeholder}
-                    rows={field.rows ?? 3}
+                    rows={field.rows ?? 1}
                   />
                   {field.description && (
                     <FieldDescription>{field.description}</FieldDescription>

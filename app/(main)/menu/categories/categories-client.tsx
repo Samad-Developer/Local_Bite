@@ -89,6 +89,7 @@ export default function CategoriesClient({ categories }: {
         <FormRenderer
           fields={categoryFields}
           control={form.control as Control<any>}
+          className="flex flex-col gap-5"
         />
 
         {serverError && (

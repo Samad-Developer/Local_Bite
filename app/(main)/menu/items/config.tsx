@@ -48,6 +48,7 @@ export const menuItemSchema = z.object({
   name: z.string().min(1, "Item name is required").max(100),
   description: z.string().max(500).optional(),
   basePrice: z.coerce.number().min(1, "Price must be greater than 0"),
+  sortOrder: z.coerce.number().min(0, "Must be 0 or greater"),
   categoryId: z.string().min(1, "Category is required"),
   isBestseller: z.boolean(),
   isNew: z.boolean(),
@@ -63,6 +64,7 @@ export const menuItemDefaultValues: MenuItemFormData = {
   name: "",
   description: "",
   basePrice: 0,
+  sortOrder: 0,
   categoryId: "",
   isBestseller: false,
   isNew: false,
@@ -73,20 +75,7 @@ export const menuItemDefaultValues: MenuItemFormData = {
 // ──Form Fields Config ──────────────────────────────────
 
 export const menuItemFields = (categories: Category[]): FieldConfig[] => [
-  {
-    name: "name",
-    label: "Item Name",
-    type: "text",
-    placeholder: "e.g. Chicken Karahi",
-  },
-  {
-    name: "description",
-    label: "Description",
-    type: "textarea",
-    placeholder: "Describe the item...",
-    rows: 3,
-  },
-  {
+    {
     name: "categoryId",
     label: "Category",
     type: "select",
@@ -94,10 +83,31 @@ export const menuItemFields = (categories: Category[]): FieldConfig[] => [
     options: categories.map((c) => ({ label: c.name, value: c.id })),
   },
   {
+    name: "name",
+    label: "Item Name",
+    type: "text",
+    placeholder: "e.g. Chicken Karahi",
+  },
+
+  {
     name: "basePrice",
     label: "Base Price (Rs.)",
     type: "number",
     placeholder: "1200",
+  },
+  {
+    name: "sortOrder",
+    label: "Sort Order",
+    type: "number",
+    placeholder: "1"
+  },
+  {
+    name: "description",
+    label: "Description",
+    type: "textarea",
+    placeholder: "Describe the item...",
+    rows: 1,
+    className: "col-span-full"
   },
   {
     name: "isAvailable",

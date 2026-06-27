@@ -78,6 +78,7 @@ export async function getMenuItems({
 export async function createMenuItem(data: {
   name: string
   description?: string
+  sortOrder: number
   basePrice: number
   categoryId: string
   isBestseller: boolean
@@ -87,13 +88,6 @@ export async function createMenuItem(data: {
 }) {
   const session = await auth()
   if (!session) return { error: "Not authenticated" }
-  console.log("checkign what's coming in data", data)
-
-  const last = await prisma.menuItem.findFirst({
-    where: { restaurantId: session.user.restaurantId },
-    orderBy: { sortOrder: "desc" },
-  })
-
 
   await prisma.$transaction(async (tx) => {
     const item = await tx.menuItem.create({
@@ -105,7 +99,7 @@ export async function createMenuItem(data: {
         isBestseller: data.isBestseller,
         isNew: data.isNew,
         isAvailable: data.isAvailable,
-        sortOrder: (last?.sortOrder ?? 0) + 1,
+        sortOrder: data.sortOrder,
         restaurantId: session.user.restaurantId,
       },
     })
@@ -131,6 +125,7 @@ export async function updateMenuItem(
     name: string
     description?: string
     basePrice: number
+    sortOrder: number
     categoryId: string
     isBestseller: boolean
     isNew: boolean
@@ -152,6 +147,7 @@ export async function updateMenuItem(
         isBestseller: data.isBestseller,
         isNew: data.isNew,
         isAvailable: data.isAvailable,
+        sortOrder: data.sortOrder
       },
     })
 

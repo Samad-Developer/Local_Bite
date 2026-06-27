@@ -15,6 +15,7 @@ interface BaseField {
   name: string
   label: string
   description?: string  // optional helper text below the field
+  className?: string
 }
 
 export interface TextFieldConfig extends BaseField {

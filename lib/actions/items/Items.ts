@@ -18,6 +18,11 @@ export async function getMenuItemById(id: string) {
     include: {
       category: true,
       images: { orderBy: { sortOrder: "asc" } },
+      variants: {
+        orderBy: {
+          sortOrder: "asc",
+        },
+      },
       discounts: {
         include: {
           discount: true,

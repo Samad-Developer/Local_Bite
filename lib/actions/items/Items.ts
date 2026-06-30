@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 
 export async function getMenuItemById(id: string) {
   const session = await auth();
@@ -85,7 +86,7 @@ export async function createMenuItem(data: {
   const session = await auth();
   if (!session) return { error: "Not authenticated" };
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const item = await tx.menuItem.create({
       data: {
         name: data.name.trim(),
@@ -128,7 +129,7 @@ export async function updateMenuItem(data: {
   const session = await auth();
   if (!session) return { error: "Not authenticated" };
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.menuItem.update({
       where: { id: data.id },
       data: {

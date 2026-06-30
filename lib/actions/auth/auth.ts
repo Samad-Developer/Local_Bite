@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { signIn } from "@/auth"
 import bcrypt from "bcryptjs"
 import { LoginSchema, SignupFormSchema } from "../../validations/auth";
+import { Prisma } from "@prisma/client";
 
 // REGISTER
 export async function registerOwner(
@@ -58,7 +59,7 @@ export async function registerOwner(
   const hashedPassword = await bcrypt.hash(password, 10)
 
   // create restaurant + owner + operating hours together
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const restaurant = await tx.restaurant.create({
       data: {
         name: restaurantName,

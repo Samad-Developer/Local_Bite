@@ -7,7 +7,7 @@ export default function Error({ error, reset }: {
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4">
-      <p className="text-sm text-destructive">Failed to load categories</p>
+      <p className="text-sm text-destructive">{error.message}</p>
       <Button variant="outline" onClick={reset}>Try again</Button>
     </div>
   )

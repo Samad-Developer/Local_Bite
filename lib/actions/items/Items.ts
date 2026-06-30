@@ -1,13 +1,13 @@
-"use server"
+"use server";
 
-import { prisma } from "@/lib/prisma"
-import { auth } from "@/auth"
-import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function getMenuItemById(id: string) {
-  const session = await auth()
-  if (!session) return null
+  const session = await auth();
+  if (!session) return null;
 
   const menuItem = await prisma.menuItem.findFirst({
     where: {
@@ -24,15 +24,12 @@ export async function getMenuItemById(id: string) {
         where: {
           discount: {
             isActive: true,
-            OR: [
-              { endDate: null },
-              { endDate: { gte: new Date() } },
-            ],
+            OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
           },
         },
       },
     },
-  })
+  });
 
   return menuItem;
 }
@@ -41,11 +38,11 @@ export async function getMenuItems({
   search,
   categoryId,
 }: {
-  search?: string
-  categoryId?: string
+  search?: string;
+  categoryId?: string;
 } = {}) {
-  const session = await auth()
-  if (!session) return []
+  const session = await auth();
+  if (!session) return [];
 
   return await prisma.menuItem.findMany({
     where: {
@@ -57,6 +54,9 @@ export async function getMenuItems({
     include: {
       category: true,
       images: { orderBy: { sortOrder: "asc" } },
+      variants: {
+        orderBy: { sortOrder: "asc" },
+      },
       discounts: {
         include: {
           discount: true,
@@ -64,37 +64,32 @@ export async function getMenuItems({
         where: {
           discount: {
             isActive: true,
-            OR: [
-              { endDate: null },
-              { endDate: { gte: new Date() } },
-            ],
+            OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
           },
         },
       },
     },
-  })
+  });
 }
 
 export async function createMenuItem(data: {
-  name: string
-  description?: string
-  sortOrder: number
-  basePrice: number
-  categoryId: string
-  isBestseller: boolean
-  isNew: boolean
-  isAvailable: boolean
-  imageUrls: string[]
+  name: string;
+  description?: string;
+  sortOrder: number;
+  categoryId: string;
+  isBestseller: boolean;
+  isNew: boolean;
+  isAvailable: boolean;
+  imageUrls: string[];
 }) {
-  const session = await auth()
-  if (!session) return { error: "Not authenticated" }
+  const session = await auth();
+  if (!session) return { error: "Not authenticated" };
 
   await prisma.$transaction(async (tx) => {
     const item = await tx.menuItem.create({
       data: {
         name: data.name.trim(),
         description: data.description?.trim() || null,
-        basePrice: data.basePrice,
         categoryId: data.categoryId,
         isBestseller: data.isBestseller,
         isNew: data.isNew,
@@ -102,7 +97,7 @@ export async function createMenuItem(data: {
         sortOrder: data.sortOrder,
         restaurantId: session.user.restaurantId,
       },
-    })
+    });
 
     if (data.imageUrls.length > 0) {
       await tx.menuItemImage.createMany({
@@ -111,30 +106,27 @@ export async function createMenuItem(data: {
           sortOrder: index,
           menuItemId: item.id,
         })),
-      })
+      });
     }
-  })
+  });
 
-  revalidatePath("/menu/items")
-  redirect("/menu/items")
+  revalidatePath("/menu/items");
+  redirect("/menu/items");
 }
 
-export async function updateMenuItem(
-  data: {
-    id: string
-    name: string
-    description?: string
-    basePrice: number
-    sortOrder: number
-    categoryId: string
-    isBestseller: boolean
-    isNew: boolean
-    isAvailable: boolean
-    imageUrls: string[]
-  }
-) {
-  const session = await auth()
-  if (!session) return { error: "Not authenticated" }
+export async function updateMenuItem(data: {
+  id: string;
+  name: string;
+  description?: string;
+  sortOrder: number;
+  categoryId: string;
+  isBestseller: boolean;
+  isNew: boolean;
+  isAvailable: boolean;
+  imageUrls: string[];
+}) {
+  const session = await auth();
+  if (!session) return { error: "Not authenticated" };
 
   await prisma.$transaction(async (tx) => {
     await tx.menuItem.update({
@@ -142,54 +134,50 @@ export async function updateMenuItem(
       data: {
         name: data.name.trim(),
         description: data.description?.trim() || null,
-        basePrice: data.basePrice,
         categoryId: data.categoryId,
         isBestseller: data.isBestseller,
         isNew: data.isNew,
         isAvailable: data.isAvailable,
-        sortOrder: data.sortOrder
+        sortOrder: data.sortOrder,
       },
-    })
+    });
 
     if (data.imageUrls.length > 0) {
       await tx.menuItemImage.deleteMany({
-        where: { menuItemId: data.id }
-      })
+        where: { menuItemId: data.id },
+      });
       await tx.menuItemImage.createMany({
         data: data.imageUrls.map((url, index) => ({
           url,
           sortOrder: index,
           menuItemId: data.id,
         })),
-      })
+      });
     }
-  })
+  });
 
-  revalidatePath("/menu/items")
-  redirect("/menu/items")
+  revalidatePath("/menu/items");
+  redirect("/menu/items");
 }
 
 export async function deleteMenuItem(id: string) {
-  const session = await auth()
-  if (!session) return { error: "Not authenticated" }
+  const session = await auth();
+  if (!session) return { error: "Not authenticated" };
 
-  await prisma.menuItem.delete({ where: { id } })
-  revalidatePath("/menu/items")
-  return { success: true, message: "Item Deleted Successfully" }
+  await prisma.menuItem.delete({ where: { id } });
+  revalidatePath("/menu/items");
+  return { success: true, message: "Item Deleted Successfully" };
 }
 
-export async function toggleItemAvailability(
-  id: string,
-  isAvailable: boolean
-) {
-  const session = await auth()
-  if (!session) return { error: "Not authenticated" }
+export async function toggleItemAvailability(id: string, isAvailable: boolean) {
+  const session = await auth();
+  if (!session) return { error: "Not authenticated" };
 
   await prisma.menuItem.update({
     where: { id },
     data: { isAvailable: !isAvailable },
-  })
+  });
 
-  revalidatePath("/menu/items")
-  return { success: true }
+  revalidatePath("/menu/items");
+  return { success: true };
 }

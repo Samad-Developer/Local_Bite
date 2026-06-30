@@ -1,17 +1,14 @@
 "use client";
 
-import PageHeader from "@/components/shared/PageHeader";
-import { DataTable } from "@/components/shared/DataTable";
-import {
-  menuItemColumns,
-  MenuItem,
-} from "./config";
-import { deleteMenuItem } from "@/lib/actions/items/Items";
-import { useDelete } from "@/hooks/useDelete";
-import { DeleteModal } from "@/components/shared/DeleteModal";
-import { useRouter } from "next/navigation";
 import { Route } from "next";
 import { Category } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useDelete } from "@/hooks/useDelete";
+import { menuItemColumns, MenuItem } from "./config";
+import PageHeader from "@/components/shared/PageHeader";
+import { DataTable } from "@/components/shared/DataTable";
+import { deleteMenuItem } from "@/lib/actions/items/Items";
+import { DeleteModal } from "@/components/shared/DeleteModal";
 
 export default function MenuItemsClient({
   menuItems,
@@ -43,7 +40,7 @@ export default function MenuItemsClient({
       />
 
       <DataTable
-        columns={menuItemColumns(() => { }, handleDeleteClick)}
+        columns={menuItemColumns(() => { }, handleDeleteClick, (id) => router.push(`/menu/items/${id}/edit` as Route))}
         data={menuItems}
         searchKey="name"
         searchPlaceholder="Search menu items..."

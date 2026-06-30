@@ -3,7 +3,7 @@
 import { useActionState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { loginUser } from "@/lib/actions/auth"
+import { loginUser } from "@/lib/actions/auth/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

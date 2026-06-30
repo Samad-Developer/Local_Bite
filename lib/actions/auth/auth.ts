@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { signIn } from "@/auth"
 import bcrypt from "bcryptjs"
-import { LoginSchema, SignupFormSchema } from "../validations/auth";
+import { LoginSchema, SignupFormSchema } from "../../validations/auth";
 
 // REGISTER
 export async function registerOwner(

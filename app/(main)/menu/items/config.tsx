@@ -23,7 +23,6 @@ export type MenuItem = {
   id: string;
   name: string;
   description: string | null;
-  basePrice: number;
   categoryId: string;
   isBestseller: boolean;
   isNew: boolean;
@@ -31,6 +30,14 @@ export type MenuItem = {
   sortOrder: number;
   category: Category;
   images: { id: string; url: string; sortOrder: number }[];
+  variants: {
+    id: string;
+    name: string;
+    price: number;
+    isDefault: boolean;
+    isAvailable: boolean;
+    sortOrder: number;
+  }[];
   discounts: {
     discount: {
       id: string;
@@ -47,7 +54,6 @@ export type MenuItem = {
 export const menuItemSchema = z.object({
   name: z.string().min(1, "Item name is required").max(100),
   description: z.string().max(500).optional(),
-  basePrice: z.coerce.number().min(1, "Price must be greater than 0"),
   sortOrder: z.coerce.number().min(0, "Must be 0 or greater"),
   categoryId: z.string().min(1, "Category is required"),
   isBestseller: z.boolean(),
@@ -63,7 +69,6 @@ export type MenuItemFormData = z.infer<typeof menuItemSchema>;
 export const menuItemDefaultValues: MenuItemFormData = {
   name: "",
   description: "",
-  basePrice: 0,
   sortOrder: 0,
   categoryId: "",
   isBestseller: false,
@@ -75,7 +80,7 @@ export const menuItemDefaultValues: MenuItemFormData = {
 // ──Form Fields Config ──────────────────────────────────
 
 export const menuItemFields = (categories: Category[]): FieldConfig[] => [
-    {
+  {
     name: "categoryId",
     label: "Category",
     type: "select",
@@ -88,18 +93,11 @@ export const menuItemFields = (categories: Category[]): FieldConfig[] => [
     type: "text",
     placeholder: "e.g. Chicken Karahi",
   },
-
-  {
-    name: "basePrice",
-    label: "Base Price (Rs.)",
-    type: "number",
-    placeholder: "1200",
-  },
   {
     name: "sortOrder",
     label: "Sort Order",
     type: "number",
-    placeholder: "1"
+    placeholder: "1",
   },
   {
     name: "description",
@@ -107,7 +105,7 @@ export const menuItemFields = (categories: Category[]): FieldConfig[] => [
     type: "textarea",
     placeholder: "Describe the item...",
     rows: 1,
-    className: "col-span-full"
+    className: "col-span-full",
   },
   {
     name: "isAvailable",
@@ -134,143 +132,142 @@ export const menuItemFields = (categories: Category[]): FieldConfig[] => [
 export const menuItemColumns = (
   onEdit: (row: MenuItem) => void,
   onDelete: (row: MenuItem) => void,
+  onNavigate: (id: string) => void,
 ): ColumnDef<MenuItem>[] => [
-    {
-      accessorKey: "name",
-      header: "Item",
-      cell: ({ row }) => {
-        const item = row.original;
-        const image = item.images[0]?.url;
+  {
+    accessorKey: "name",
+    header: "Item",
+    cell: ({ row }) => {
+      const item = row.original;
+      const image = item.images[0]?.url;
 
-        return (
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg overflow-hidden border border-[#e5e7eb] flex-shrink-0 bg-[#f9fafb]">
-              {image ? (
-                <Image
-                  src={image}
-                  alt={item.name}
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <UtensilsCrossed className="w-4 h-4 text-[#d1d5db]" />
-                </div>
-              )}
-            </div>
-            <div>
-              <span className="text-sm font-medium text-[#111111]">
-                {item.name}
-              </span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "category",
-      header: "Category",
-      cell: ({ row }) => {
-        const item = row.original;
-        const categoryName = item.category.name;
-
-        return <span>{categoryName}</span>;
-      },
-    },
-    {
-      accessorKey: "basePrice",
-      header: "Price",
-      cell: ({ row }) => {
-        const item = row.original;
-        const finalPrice = computeFinalPrice(item.basePrice, item.discounts);
-        const hasDiscount = finalPrice !== item.basePrice;
-
-        return (
-          <div>
-            <span className="text-sm font-semibold text-[#111111]">
-              Rs. {finalPrice.toLocaleString()}
-            </span>
-            {hasDiscount && (
-              <p className="text-xs text-[#9ca3af] line-through">
-                Rs. {item.basePrice.toLocaleString()}
-              </p>
+      return (
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-lg overflow-hidden border border-[#e5e7eb] flex-shrink-0 bg-[#f9fafb]">
+            {image ? (
+              <Image
+                src={image}
+                alt={item.name}
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <UtensilsCrossed className="w-4 h-4 text-[#d1d5db]" />
+              </div>
             )}
           </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'isBestseller',
-      header: "is best seller"
-    },
-    {
-      id: "discount",
-      header: "Discount",
-      cell: ({ row }) => {
-        const active = row.original.discounts[0];
-        if (!active) return <span className="text-xs text-[#9ca3af]">—</span>;
-
-        const { name, type, value } = active.discount;
-        return (
           <div>
-            <span className="text-xs font-medium text-[#f97316]">{name}</span>
+            <span className="text-sm font-medium text-[#111111]">
+              {item.name}
+            </span>
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "category",
+    header: "Category",
+    cell: ({ row }) => {
+      const item = row.original;
+      const categoryName = item.category.name;
+
+      return <span>{categoryName}</span>;
+    },
+  },
+  {
+    id: "price", // ← change from accessorKey: "basePrice" to id: "price"
+    header: "Price",
+    cell: ({ row }) => {
+      const defaultVariant = row.original.variants.find((v) => v.isDefault);
+      const price = defaultVariant?.price ?? 0;
+      const hasMultipleVariants = row.original.variants.length > 1;
+
+      return (
+        <div>
+          <span className="text-sm font-semibold text-[#111111]">
+            {hasMultipleVariants ? "From " : ""}
+            Rs. {price.toLocaleString()}
+          </span>
+          {hasMultipleVariants && (
             <p className="text-xs text-[#9ca3af]">
-              {type === "PERCENTAGE" ? `${value}% off` : `Rs. ${value} off`}
+              {row.original.variants.length} variants
             </p>
-          </div>
-        );
-      },
+          )}
+        </div>
+      );
     },
-    {
-      accessorKey: "isAvailable",
-      header: "Status",
-      cell: ({ row }) => {
-        const available = row.getValue("isAvailable") as boolean;
-        return (
-          <Badge
-            className={
-              available
-                ? "bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0]"
-                : "bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]"
-            }
+  },
+  {
+    accessorKey: "isBestseller",
+    header: "is best seller",
+  },
+  {
+    id: "discount",
+    header: "Discount",
+    cell: ({ row }) => {
+      const active = row.original.discounts[0];
+      if (!active) return <span className="text-xs text-[#9ca3af]">—</span>;
+
+      const { name, type, value } = active.discount;
+      return (
+        <div>
+          <span className="text-xs font-medium text-[#f97316]">{name}</span>
+          <p className="text-xs text-[#9ca3af]">
+            {type === "PERCENTAGE" ? `${value}% off` : `Rs. ${value} off`}
+          </p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "isAvailable",
+    header: "Status",
+    cell: ({ row }) => {
+      const available = row.getValue("isAvailable") as boolean;
+      return (
+        <Badge
+          className={
+            available
+              ? "bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0]"
+              : "bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]"
+          }
+        >
+          {available ? "Available" : "Unavailable"}
+        </Badge>
+      );
+    },
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-right">Actions</div>,
+    cell: ({ row }) => {
+      const router = useRouter();
+
+      return (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-transparent text-[#9ca3af] hover:text-[#111111]"
+            onClick={() => {
+              onNavigate(row.original.id);
+            }}
           >
-            {available ? "Available" : "Unavailable"}
-          </Badge>
-        );
-      },
+            <Pencil className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-transparent text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fef2f2]"
+            onClick={() => onDelete(row.original)}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      );
     },
-    {
-      id: "actions",
-      header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => {
-
-        const router = useRouter();
-
-        return (
-          <div className="flex items-center justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 bg-transparent text-[#9ca3af] hover:text-[#111111]"
-              // onClick={() => onEdit(row.original)}
-              onClick={() => {
-                const productId = row.original.id;
-                router.push(`/menu/items/${productId}/edit` as Route)
-              }}
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 bg-transparent text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fef2f2]"
-              onClick={() => onDelete(row.original)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        )
-      },
-    },
-  ];
+  },
+];

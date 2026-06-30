@@ -31,7 +31,6 @@ export const MenuItemClient = ({ categories, item }: MenuItemClientProps) => {
       toFormValues: (row) => ({
         name: row.name,
         description: row.description ?? "",
-        basePrice: row.basePrice,
         categoryId: row.categoryId,
         isBestseller: row.isBestseller,
         isNew: row.isNew,

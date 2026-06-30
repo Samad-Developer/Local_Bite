@@ -88,10 +88,9 @@ model Restaurant {
   users          User[]
   categories     Category[]
   menuItems      MenuItem[]
-  addonGroups    AddonGroup[]
   orders         Order[]
   operatingHours OperatingHours[]
-  discounts    Discount[]
+  discounts      Discount[]
 }
 
 model User {
@@ -132,7 +131,6 @@ model MenuItem {
   id              String          @id @default(cuid())
   name            String
   description     String?
-  basePrice       Float
   spicyLevel      SpicyLevel      @default(NONE)
   foodType        FoodType        @default(NON_VEG)
   preparationTime Int             @default(15)
@@ -141,16 +139,55 @@ model MenuItem {
   isNew           Boolean         @default(false)
   sortOrder       Int             @default(0)
   categoryId      String
-  category        Category        @relation(fields: [categoryId], references: [id])
   restaurantId    String
+  category        Category        @relation(fields: [categoryId], references: [id])
   restaurant      Restaurant      @relation(fields: [restaurantId], references: [id])
   images          MenuItemImage[]
-  variants        Variant[]
+  variants        Variant[]   
+  discounts       DiscountItem[]
   orderItems      OrderItem[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+}
 
-  discounts    DiscountItem[]
+model Variant {
+  id           String       @id @default(cuid())
+  name         String       // "Regular", "Small", "Medium", "Large"
+  price        Float        // price always here
+  isDefault    Boolean      @default(false)
+  isAvailable  Boolean      @default(true)
+  sortOrder    Int          @default(0)
+  menuItemId   String
+  menuItem     MenuItem     @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  addonGroups  AddonGroup[] // ALWAYS belongs to variant
+  orderItems   OrderItemVariant[]
+  createdAt    DateTime     @default(now())
+}
+
+model AddonGroup {
+  id            String     @id @default(cuid())
+  name          String
+  isRequired    Boolean    @default(false)
+  isMultiple    Boolean    @default(true)
+  minSelections Int        @default(0)
+  maxSelections Int?       // null = unlimited
+  sortOrder     Int        @default(0)
+  variantId     String     // ALWAYS belongs to a variant
+  variant       Variant    @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  addons        Addon[]
+  createdAt     DateTime   @default(now())
+}
+
+model Addon {
+  id              String           @id @default(cuid())
+  name            String
+  price           Float            @default(0)
+  isAvailable     Boolean          @default(true)
+  sortOrder       Int              @default(0)
+  addonGroupId    String
+  addonGroup      AddonGroup       @relation(fields: [addonGroupId], references: [id], onDelete: Cascade)
+  orderItemAddons OrderItemAddon[]
+  createdAt       DateTime         @default(now())
 }
 
 model Discount {
@@ -186,34 +223,6 @@ model MenuItemImage {
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 }
 
-model Variant {
-  id                String             @id @default(cuid())
-  name              String
-  price             Float
-  isDefault         Boolean            @default(false)
-  menuItemId        String
-  menuItem          MenuItem           @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
-  orderItemVariants OrderItemVariant[]
-}
-
-model AddonGroup {
-  id           String     @id @default(cuid())
-  name         String
-  isRequired   Boolean    @default(false)
-  isMultiple   Boolean    @default(true)
-  restaurantId String
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
-  addons       Addon[]
-}
-
-model Addon {
-  id              String           @id @default(cuid())
-  name            String
-  price           Float
-  addonGroupId    String
-  addonGroup      AddonGroup       @relation(fields: [addonGroupId], references: [id], onDelete: Cascade)
-  orderItemAddons OrderItemAddon[]
-}
 
 model Order {
   id              String        @id @default(cuid())

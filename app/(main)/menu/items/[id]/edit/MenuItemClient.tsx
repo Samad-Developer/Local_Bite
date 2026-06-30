@@ -10,9 +10,9 @@ import {
   menuItemSchema,
   menuItemDefaultValues,
   menuItemFields,
+  Category
 } from "../../config";
 import { createMenuItem, updateMenuItem } from "@/lib/actions/items/Items";
-import { Category } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 

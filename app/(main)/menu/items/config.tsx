@@ -10,14 +10,14 @@ import { computeFinalPrice } from "@/lib/utils/pricing";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Route } from "next";
-import { Category } from "@prisma/client";
+// import { Category } from "@prisma/client";
 
 // ── Types ──────────────────────────────────────────
 
-// export type Category = {
-//   id: string;
-//   name: string;
-// };
+export type Category = {
+  id: string;
+  name: string;
+};
 
 export type MenuItem = {
   id: string;

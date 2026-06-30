@@ -1,10 +1,9 @@
 "use client";
 
 import { Route } from "next";
-import { Category } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useDelete } from "@/hooks/useDelete";
-import { menuItemColumns, MenuItem } from "./config";
+import { menuItemColumns, MenuItem, Category } from "./config";
 import PageHeader from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
 import { deleteMenuItem } from "@/lib/actions/items/Items";

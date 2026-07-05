@@ -13,9 +13,7 @@ export function useDelete<TRecord>({
   deleteAction,
   getId,
 }: deleteOptions<TRecord>) {
-  // delete states
   const [deleteTarget, setDeleteTarget] = useState<TRecord | null>(null);
-
   const [isDeleting, startDeleteTransition] = useTransition();
 
   function handleDeleteClick(row: TRecord) {

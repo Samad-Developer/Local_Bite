@@ -60,7 +60,7 @@ export async function updateCategory(data: {
   })
 
   revalidatePath("/menu/categories")
-  return { success: true }
+  return { success: true, message: "Category Updated Successfully" }
 }
 
 export async function deleteCategory(id: string) {

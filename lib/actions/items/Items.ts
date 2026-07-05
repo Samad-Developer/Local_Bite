@@ -81,6 +81,7 @@ export async function getMenuItems({
 export async function createMenuItem(data: {
   name: string;
   description?: string;
+  defaultPrice: number;
   sortOrder: number;
   categoryId: string;
   isBestseller: boolean;
@@ -92,6 +93,7 @@ export async function createMenuItem(data: {
   if (!session) return { error: "Not authenticated" };
 
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    // Create new menu item
     const item = await tx.menuItem.create({
       data: {
         name: data.name.trim(),
@@ -105,6 +107,19 @@ export async function createMenuItem(data: {
       },
     });
 
+    // auto create default varaint with base price
+    await tx.variant.create({
+      data: {
+        name: "Regular",
+        price: data.defaultPrice,
+        isDefault: true,
+        isAvailable: true,
+        sortOrder: 0,
+        menuItemId: item.id,
+      },
+    });
+
+    // Create menu item images
     if (data.imageUrls.length > 0) {
       await tx.menuItemImage.createMany({
         data: data.imageUrls.map((url, index) => ({
@@ -117,12 +132,13 @@ export async function createMenuItem(data: {
   });
 
   revalidatePath("/menu/items");
-  redirect("/menu/items");
+  return { success: true, message: "Menu item created successfully" };
 }
 
 export async function updateMenuItem(data: {
   id: string;
   name: string;
+  defaultPrice: number;
   description?: string;
   sortOrder: number;
   categoryId: string;
@@ -148,6 +164,11 @@ export async function updateMenuItem(data: {
       },
     });
 
+    await tx.variant.updateMany({
+      where: { menuItemId: data.id, isDefault: true },
+      data: { price: data.defaultPrice },
+    });
+
     if (data.imageUrls.length > 0) {
       await tx.menuItemImage.deleteMany({
         where: { menuItemId: data.id },
@@ -163,7 +184,7 @@ export async function updateMenuItem(data: {
   });
 
   revalidatePath("/menu/items");
-  redirect("/menu/items");
+  return { success: true, message: "Menu item updated successfully" };
 }
 
 export async function deleteMenuItem(id: string) {

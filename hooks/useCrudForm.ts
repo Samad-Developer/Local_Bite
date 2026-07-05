@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useForm, FieldValues, DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ZodSchema } from "zod";
+import { toast } from "sonner";
 
 interface UseCrudFormOptions<TRecord, TFormData extends FieldValues> {
   schema: ZodSchema<TFormData>;
@@ -14,12 +15,15 @@ interface UseCrudFormOptions<TRecord, TFormData extends FieldValues> {
   // converts a table row into form values when editing
   toFormValues?: (record: TRecord) => TFormData;
 
+  // any custom action you want to perform after a successful create or update can be handled in the onSubmit function
+  onSuccess?: () => void;
+
   // gets the id from a record — used when calling updateAction
   getId: (record: TRecord) => string;
 
   // server action for create and update
-  createAction: (data: TFormData) => Promise<{ success?: boolean; error?: string }>;
-  updateAction: (data: TFormData & { id: string }) => Promise<{ success?: boolean; error?: string }>;
+  createAction: (data: TFormData) => Promise<{ success?: boolean; error?: string; message?: string }>;
+  updateAction: (data: TFormData & { id: string }) => Promise<{ success?: boolean; error?: string; message?: string }>;
 }
 
 export function useCrudForm<TRecord, TFormData extends FieldValues>({
@@ -27,6 +31,7 @@ export function useCrudForm<TRecord, TFormData extends FieldValues>({
   defaultValues,
   initialRecord,
   toFormValues,
+  onSuccess,
   getId,
   createAction,
   updateAction,
@@ -34,11 +39,9 @@ export function useCrudForm<TRecord, TFormData extends FieldValues>({
   const [modalOpen, setModalOpen] = useState(false);
   const [record, setRecord] = useState<TRecord | null>(initialRecord ?? null);
   const [serverError, setServerError] = useState("");
-  const [isPending, startTransition] = useTransition();
 
-  const resolvedDefaults = initialRecord && toFormValues
-    ? toFormValues(initialRecord)
-    : defaultValues;
+  const resolvedDefaults =
+    initialRecord && toFormValues ? toFormValues(initialRecord) : defaultValues;
 
   const form = useForm<TFormData>({
     resolver: zodResolver(schema),
@@ -56,7 +59,9 @@ export function useCrudForm<TRecord, TFormData extends FieldValues>({
   function handleEdit(row: TRecord) {
     setRecord(row);
     setServerError("");
-    const values = toFormValues ? toFormValues(row) : (row as unknown as TFormData);
+    const values = toFormValues
+      ? toFormValues(row)
+      : (row as unknown as TFormData);
     form.reset(values as DefaultValues<TFormData>);
     setModalOpen(true);
   }
@@ -67,9 +72,9 @@ export function useCrudForm<TRecord, TFormData extends FieldValues>({
     setServerError("");
   }
 
-  function onSubmit(data: TFormData) {
-    setServerError("");
-    startTransition(async () => {
+  async function onSubmit(data: TFormData) {
+    setServerError("");    
+    try {
       const result = record
         ? await updateAction({ ...data, id: getId(record) })
         : await createAction(data);
@@ -80,7 +85,15 @@ export function useCrudForm<TRecord, TFormData extends FieldValues>({
       }
 
       handleClose();
-    });
+      toast.success(
+        result?.message ??
+          (record
+            ? "Record updated successfully"
+            : "Record created successfully"),
+      );
+      onSuccess?.();
+    } finally {
+    }
   }
 
   return {
@@ -88,7 +101,7 @@ export function useCrudForm<TRecord, TFormData extends FieldValues>({
     modalOpen,
     record,
     serverError,
-    isPending,
+    isPending: form.formState.isSubmitting,
     isEditing: record !== null,
     handleCreate,
     handleEdit,

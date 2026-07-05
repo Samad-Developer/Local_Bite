@@ -10,11 +10,12 @@ import {
   menuItemSchema,
   menuItemDefaultValues,
   menuItemFields,
-  Category
+  Category,
 } from "../../config";
 import { createMenuItem, updateMenuItem } from "@/lib/actions/items/Items";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { useRouter } from "next/navigation";
 
 interface MenuItemClientProps {
   categories: Category[];
@@ -22,7 +23,8 @@ interface MenuItemClientProps {
 }
 
 export const MenuItemClient = ({ categories, item }: MenuItemClientProps) => {
-  
+  const router = useRouter();
+
   const { form, serverError, isPending, onSubmit, handleEdit, isEditing } =
     useCrudForm<MenuItem, MenuItemFormData>({
       schema: menuItemSchema,
@@ -30,6 +32,7 @@ export const MenuItemClient = ({ categories, item }: MenuItemClientProps) => {
       initialRecord: item,
       toFormValues: (row) => ({
         name: row.name,
+        defaultPrice: row.variants.find((v) => v.isDefault)?.price ?? 0,
         description: row.description ?? "",
         categoryId: row.categoryId,
         isBestseller: row.isBestseller,
@@ -38,6 +41,9 @@ export const MenuItemClient = ({ categories, item }: MenuItemClientProps) => {
         isAvailable: row.isAvailable,
         imageUrls: row.images.map((img) => img.url),
       }),
+      onSuccess: () => {
+        router.push("/menu/items");
+      },
       getId: (row) => row.id,
       createAction: createMenuItem,
       updateAction: updateMenuItem,
@@ -45,14 +51,14 @@ export const MenuItemClient = ({ categories, item }: MenuItemClientProps) => {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
-      <div className="space-y-4 max-w-4xl mx-auto">
+      <div className="space-y-4 mx-auto">
         <h1 className="text-2xl font-semibold text-[#111111] mb-4">
           {isEditing ? "Edit Product" : "Create Product"}
         </h1>
         <FormRenderer
           fields={menuItemFields(categories)}
           control={form.control as Control<any>}
-          className="grid grid-cols-2 gap-5"
+          className="grid grid-cols-3 gap-5"
         />
 
         <ImageUploadField

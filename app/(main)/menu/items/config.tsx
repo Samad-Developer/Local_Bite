@@ -22,6 +22,7 @@ export type Category = {
 export type MenuItem = {
   id: string;
   name: string;
+  defaultPrice: number;
   description: string | null;
   categoryId: string;
   isBestseller: boolean;
@@ -53,6 +54,7 @@ export type MenuItem = {
 
 export const menuItemSchema = z.object({
   name: z.string().min(1, "Item name is required").max(100),
+  defaultPrice: z.coerce.number().min(0, "Price must be 0 or greater"),
   description: z.string().max(500).optional(),
   sortOrder: z.coerce.number().min(0, "Must be 0 or greater"),
   categoryId: z.string().min(1, "Category is required"),
@@ -68,6 +70,7 @@ export type MenuItemFormData = z.infer<typeof menuItemSchema>;
 
 export const menuItemDefaultValues: MenuItemFormData = {
   name: "",
+  defaultPrice: 0,
   description: "",
   sortOrder: 0,
   categoryId: "",
@@ -94,11 +97,12 @@ export const menuItemFields = (categories: Category[]): FieldConfig[] => [
     placeholder: "e.g. Chicken Karahi",
   },
   {
-    name: "sortOrder",
-    label: "Sort Order",
+    name: "defaultPrice",
+    label: "Base Price",
     type: "number",
-    placeholder: "1",
+    placeholder: "0.00",
   },
+ 
   {
     name: "description",
     label: "Description",
@@ -106,6 +110,12 @@ export const menuItemFields = (categories: Category[]): FieldConfig[] => [
     placeholder: "Describe the item...",
     rows: 1,
     className: "col-span-full",
+  },
+   {
+    name: "sortOrder",
+    label: "Sort Order",
+    type: "number",
+    placeholder: "1",
   },
   {
     name: "isAvailable",
@@ -178,7 +188,7 @@ export const menuItemColumns = (
     },
   },
   {
-    id: "price", // ← change from accessorKey: "basePrice" to id: "price"
+    id: "price", 
     header: "Price",
     cell: ({ row }) => {
       const defaultVariant = row.original.variants.find((v) => v.isDefault);

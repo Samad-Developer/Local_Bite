@@ -22,7 +22,6 @@ export type Category = {
 export type MenuItem = {
   id: string;
   name: string;
-  defaultPrice: number;
   description: string | null;
   categoryId: string;
   isBestseller: boolean;
@@ -98,11 +97,11 @@ export const menuItemFields = (categories: Category[]): FieldConfig[] => [
   },
   {
     name: "defaultPrice",
-    label: "Base Price",
+    label: "Base Price (Rs.)",
     type: "number",
-    placeholder: "0.00",
+    placeholder: "450",
+    description: "This becomes the default variant price",
   },
- 
   {
     name: "description",
     label: "Description",
@@ -111,7 +110,7 @@ export const menuItemFields = (categories: Category[]): FieldConfig[] => [
     rows: 1,
     className: "col-span-full",
   },
-   {
+  {
     name: "sortOrder",
     label: "Sort Order",
     type: "number",
@@ -188,7 +187,7 @@ export const menuItemColumns = (
     },
   },
   {
-    id: "price", 
+    id: "price",
     header: "Price",
     cell: ({ row }) => {
       const defaultVariant = row.original.variants.find((v) => v.isDefault);

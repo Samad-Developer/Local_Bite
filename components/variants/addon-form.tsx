@@ -1,38 +1,38 @@
-"use client"
+"use client";
 
-import { useState, useTransition } from "react"
-import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { createAddon, updateAddon } from "@/lib/actions/variants/addons"
-import { Field, FieldLabel, FieldError } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { Button } from "@/components/ui/button"
-import { Addon } from "@/types/variants.types"
+import { z } from "zod";
+import { Input } from "@/components/ui/input";
+import { Addon } from "@/types/variants.types";
+import { useState, useTransition } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+import type { LocalAddon } from "@/types/variants.types";
 
 const schema = z.object({
   name: z.string().min(1, "Addon name is required").max(50),
   price: z.coerce.number().min(0),
   isAvailable: z.boolean(),
-})
+});
 
-type FormValues = z.infer<typeof schema>
+type FormValues = z.infer<typeof schema>;
 
 interface AddonFormProps {
-  addonGroupId: string
-  addon?: Addon | null
-  onClose: () => void
+  addonGroupId: string;
+  addon?: Addon | null;
+  onSave: (data: Omit<LocalAddon, "deleted">) => void;
+  onClose: () => void;
 }
 
 export default function AddonForm({
   addonGroupId,
   addon,
+  onSave,
   onClose,
 }: AddonFormProps) {
-  const isEditing = addon != null
-  const [serverError, setServerError] = useState("")
-  const [isPending, startTransition] = useTransition()
+  const isEditing = addon != null;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -41,26 +41,20 @@ export default function AddonForm({
       price: addon?.price ?? 0,
       isAvailable: addon?.isAvailable ?? true,
     },
-  })
+  });
 
   function onSubmit(data: FormValues) {
-    setServerError("")
-    startTransition(async () => {
-      const result = isEditing
-        ? await updateAddon({ id: addon.id, ...data })
-        : await createAddon({ addonGroupId, ...data })
-
-      if (result?.error) {
-        setServerError(result.error)
-        return
-      }
-      onClose()
-    })
+    onSave({
+      id: addon?.id ?? `temp_${Date.now()}`,
+      addonGroupId,
+      sortOrder: addon?.sortOrder ?? 0,
+      ...data,
+    });
+    onClose();
   }
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
       <Controller
         name="name"
         control={form.control}
@@ -76,9 +70,7 @@ export default function AddonForm({
               aria-invalid={fieldState.invalid}
               className="bg-white border-[#e5e7eb] h-10"
             />
-            {fieldState.invalid && (
-              <FieldError errors={[fieldState.error]} />
-            )}
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
       />
@@ -88,9 +80,7 @@ export default function AddonForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>
-              Additional Price (Rs.)
-            </FieldLabel>
+            <FieldLabel htmlFor={field.name}>Additional Price (Rs.)</FieldLabel>
             <Input
               {...field}
               id={field.name}
@@ -99,9 +89,7 @@ export default function AddonForm({
               aria-invalid={fieldState.invalid}
               className="bg-white border-[#e5e7eb] h-10"
             />
-            {fieldState.invalid && (
-              <FieldError errors={[fieldState.error]} />
-            )}
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
       />
@@ -123,8 +111,6 @@ export default function AddonForm({
         )}
       />
 
-      {/* {serverError && <FormError message={serverError} />} */}
-
       <div className="flex gap-3 pt-2">
         <Button
           type="button"
@@ -136,16 +122,11 @@ export default function AddonForm({
         </Button>
         <Button
           type="submit"
-          disabled={isPending}
           className="flex-1 bg-[#f97316] hover:bg-[#ea6c0a] text-white"
         >
-          {isPending
-            ? isEditing ? "Saving..." : "Creating..."
-            : isEditing ? "Save Changes" : "Create"
-          }
+          {isEditing ? "Update" : "Add"}
         </Button>
       </div>
-
     </form>
-  )
+  );
 }

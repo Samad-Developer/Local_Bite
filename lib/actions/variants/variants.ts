@@ -3,6 +3,189 @@
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
+import { LocalVariant } from "@/types/variants.types"
+import { Prisma } from "@prisma/client"
+
+export async function saveItemVariants(data: {
+  menuItemId: string
+  variants: LocalVariant[]
+}) {
+  const session = await auth()
+  if (!session) return { error: "Not authenticated" }
+
+  // validate at least one default variant exists
+  const hasDefault = data.variants
+    .filter((v) => !v.deleted)
+    .some((v) => v.isDefault)
+
+  if (!hasDefault) {
+    return { error: "At least one variant must be set as default" }
+  }
+
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+
+    for (const variant of data.variants) {
+      const isNew = variant.id.startsWith("temp_")
+
+      // ── deleted ──
+      if (variant.deleted) {
+        if (!isNew) {
+          await tx.variant.delete({ where: { id: variant.id } })
+        }
+        continue
+      }
+
+      // ── create or update variant ──
+      let variantId: string
+
+      if (isNew) {
+        const created = await tx.variant.create({
+          data: {
+            name: variant.name.trim(),
+            price: variant.price,
+            isDefault: variant.isDefault,
+            isAvailable: variant.isAvailable,
+            sortOrder: variant.sortOrder,
+            menuItemId: data.menuItemId,
+          },
+        })
+        variantId = created.id
+      } else {
+        await tx.variant.update({
+          where: { id: variant.id },
+          data: {
+            name: variant.name.trim(),
+            price: variant.price,
+            isDefault: variant.isDefault,
+            isAvailable: variant.isAvailable,
+          },
+        })
+        variantId = variant.id
+      }
+
+      // ── addon groups ──
+      for (const group of variant.addonGroups) {
+        const isNewGroup = group.id.startsWith("temp_")
+
+        if (group.deleted) {
+          if (!isNewGroup) {
+            await tx.addonGroup.delete({ where: { id: group.id } })
+          }
+          continue
+        }
+
+        let groupId: string
+
+        if (isNewGroup) {
+          const created = await tx.addonGroup.create({
+            data: {
+              name: group.name.trim(),
+              isRequired: group.isRequired,
+              isMultiple: group.isMultiple,
+              minSelections: group.minSelections,
+              maxSelections: group.maxSelections,
+              sortOrder: group.sortOrder,
+              variantId,
+            },
+          })
+          groupId = created.id
+        } else {
+          await tx.addonGroup.update({
+            where: { id: group.id },
+            data: {
+              name: group.name.trim(),
+              isRequired: group.isRequired,
+              isMultiple: group.isMultiple,
+              minSelections: group.minSelections,
+              maxSelections: group.maxSelections,
+            },
+          })
+          groupId = group.id
+        }
+
+        // ── addons ──
+        for (const addon of group.addons) {
+          const isNewAddon = addon.id.startsWith("temp_")
+
+          if (addon.deleted) {
+            if (!isNewAddon) {
+              await tx.addon.delete({ where: { id: addon.id } })
+            }
+            continue
+          }
+
+          if (isNewAddon) {
+            await tx.addon.create({
+              data: {
+                name: addon.name.trim(),
+                price: addon.price,
+                isAvailable: addon.isAvailable,
+                sortOrder: addon.sortOrder,
+                addonGroupId: groupId,
+              },
+            })
+          } else {
+            await tx.addon.update({
+              where: { id: addon.id },
+              data: {
+                name: addon.name.trim(),
+                price: addon.price,
+                isAvailable: addon.isAvailable,
+              },
+            })
+          }
+        }
+      }
+    }
+  })
+
+  revalidatePath("/menu/variants")
+  return { success: true, message: "All changes saved successfully" }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ── Variant Actions ────────────────────────────────
 

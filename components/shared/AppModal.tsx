@@ -20,8 +20,11 @@ interface ModalProps {
   isEditing: boolean;
   size?: "sm" | "md" | "lg";
   // ── new props for form mode ──
-  formId: string;
+  formId?: string;
   onSubmit?: () => void;
+
+  // make footer optional
+  isFooter?: boolean;
 }
 
 const modalSizeMap = {
@@ -41,6 +44,7 @@ export function AppModal({
   size = "md",
   formId,
   onSubmit,
+  isFooter = true,
 }: ModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -69,29 +73,33 @@ export function AppModal({
         ) : (
           children
         )}
-
-        <DialogFooter>
-          <Button size="lg" variant="outline" className="" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            size="lg"
-            variant="default"
-            form={formId}
-            disabled={isPending}
-            className=""
-          >
-            {isPending ? (
-              <>
-                <Spinner />
-                {isEditing ? "Saving..." : "Creating..."}
-              </>
-            ) :  (
-             isEditing ? "Save Changes" : "Create"
-            )}
-          </Button>
-        </DialogFooter>
+        
+        {isFooter && (
+          <DialogFooter>
+            <Button size="lg" variant="outline" className="" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="lg"
+              variant="default"
+              form={formId}
+              disabled={isPending}
+              className=""
+            >
+              {isPending ? (
+                <>
+                  <Spinner />
+                  {isEditing ? "Saving..." : "Creating..."}
+                </>
+              ) : isEditing ? (
+                "Save Changes"
+              ) : (
+                "Create"
+              )}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

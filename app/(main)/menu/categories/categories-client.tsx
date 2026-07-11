@@ -1,7 +1,6 @@
 "use client";
 
 import { Control } from "react-hook-form";
-import { useState, useTransition } from "react";
 import { useCrudForm } from "@/hooks/useCrudForm";
 import { AppModal } from "@/components/shared/AppModal";
 import PageHeader from "@/components/shared/PageHeader";
@@ -91,12 +90,6 @@ export default function CategoriesClient({ categories }: {
           control={form.control as Control<any>}
           className="flex flex-col gap-5"
         />
-
-        {serverError && (
-          <p className="text-sm text-[#dc2626] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-3 py-2 mt-4">
-            {serverError}
-          </p>
-        )}
       </AppModal>
 
       {/* Delete Confirmation Modal */}

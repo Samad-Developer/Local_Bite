@@ -26,7 +26,5 @@ export default async function VariantsPage() {
     },
   })
 
-  console.log("Just Checking How Menu Items with Variants Looks like", menuItems)
-
   return <VariantsClient menuItems={menuItems} />
 }

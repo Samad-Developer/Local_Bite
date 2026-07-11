@@ -124,6 +124,7 @@ model Category {
   restaurantId String
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
   menuItems    MenuItem[]
+  discounts    DiscountItem[]
   createdAt    DateTime   @default(now())
 }
 
@@ -208,11 +209,16 @@ model Discount {
 model DiscountItem {
   id         String    @id @default(cuid())
   discountId String
-  menuItemId String
   discount   Discount  @relation(fields: [discountId], references: [id], onDelete: Cascade)
-  menuItem   MenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  // ONE of these is set, other is null
+  menuItemId  String?
+  categoryId  String?
+  menuItem    MenuItem?  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  category    Category?  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@unique([discountId, menuItemId])
+  @@unique([discountId, categoryId])
 }
 
 model MenuItemImage {

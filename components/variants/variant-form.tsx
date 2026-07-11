@@ -1,39 +1,38 @@
-"use client"
+"use client";
 
-import { useState, useTransition } from "react"
-import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { createVariant, updateVariant } from "@/lib/actions/variants/variants"
-import { Field, FieldLabel, FieldError } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { Button } from "@/components/ui/button"
-import { Variant } from "@/types/variants.types"
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import type { LocalVariant } from "@/types/variants.types";
 
 const schema = z.object({
   name: z.string().min(1, "Variant name is required").max(50),
   price: z.coerce.number().min(0, "Price must be 0 or more"),
   isDefault: z.boolean(),
   isAvailable: z.boolean(),
-})
+});
 
-type FormValues = z.infer<typeof schema>
+type FormValues = z.infer<typeof schema>;
 
 interface VariantFormProps {
-  menuItemId: string
-  variant?: Variant | null
-  onClose: () => void
+  menuItemId: string;
+  variant?: LocalVariant | null;
+  onSave: (data: Omit<LocalVariant, "addonGroups" | "deleted">) => void;
+  onClose: () => void;
 }
 
 export default function VariantForm({
   menuItemId,
   variant,
+  onSave,
   onClose,
 }: VariantFormProps) {
-  const isEditing = variant != null
-  const [serverError, setServerError] = useState("")
-  const [isPending, startTransition] = useTransition()
+
+  const isEditing = variant != null;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -43,26 +42,20 @@ export default function VariantForm({
       isDefault: variant?.isDefault ?? false,
       isAvailable: variant?.isAvailable ?? true,
     },
-  })
+  });
 
   function onSubmit(data: FormValues) {
-    setServerError("")
-    startTransition(async () => {
-      const result = isEditing
-        ? await updateVariant({ id: variant.id, menuItemId, ...data })
-        : await createVariant({ menuItemId, ...data })
-
-      if (result?.error) {
-        setServerError(result.error)
-        return
-      }
-      onClose()
+    onSave({
+      id: variant?.id ?? `temp_${Date.now()}`,
+      menuItemId,
+      sortOrder: variant?.sortOrder ?? 0,
+      ...data,
     })
+    onClose()
   }
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
       <Controller
         name="name"
         control={form.control}
@@ -78,9 +71,7 @@ export default function VariantForm({
               aria-invalid={fieldState.invalid}
               className="bg-white border-[#e5e7eb] h-10"
             />
-            {fieldState.invalid && (
-              <FieldError errors={[fieldState.error]} />
-            )}
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
       />
@@ -101,9 +92,7 @@ export default function VariantForm({
               aria-invalid={fieldState.invalid}
               className="bg-white border-[#e5e7eb] h-10"
             />
-            {fieldState.invalid && (
-              <FieldError errors={[fieldState.error]} />
-            )}
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
       />
@@ -142,8 +131,6 @@ export default function VariantForm({
         )}
       />
 
-      {/* {serverError && <FormError message={serverError} />} */}
-
       <div className="flex gap-3 pt-2">
         <Button
           type="button"
@@ -155,16 +142,11 @@ export default function VariantForm({
         </Button>
         <Button
           type="submit"
-          disabled={isPending}
           className="flex-1 bg-[#f97316] hover:bg-[#ea6c0a] text-white"
         >
-          {isPending
-            ? isEditing ? "Saving..." : "Creating..."
-            : isEditing ? "Save Changes" : "Create"
-          }
+          {isEditing ? "Update" : "Add"}
         </Button>
       </div>
-
     </form>
-  )
+  );
 }

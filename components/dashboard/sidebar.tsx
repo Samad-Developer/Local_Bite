@@ -13,6 +13,7 @@ import {
   ChevronRight,
   LayoutGrid,
   Layers,
+  BadgePercent
 } from "lucide-react";
 import {
   Sidebar,
@@ -90,6 +91,11 @@ const navSections: NavSection[] = [
             title: "Variants & Addons",
             href: "/menu/variants",
             icon: Layers,
+          },
+           {
+            title: "Discounts",
+            href: "/menu/discounts",
+            icon: BadgePercent,
           },
         ],
       },

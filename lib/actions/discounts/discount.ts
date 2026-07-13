@@ -24,3 +24,11 @@ export async function getDiscounts() {
 
   return discounts;
 }
+
+export async function createDiscount(): Promise<{ success?: boolean; error?: string; message?: string }> {
+ return await new Promise((resolve, reject) => setTimeout(resolve, 2000))
+}
+
+export async function updateDiscount(): Promise<{ success?: boolean; error?: string; message?: string }> {
+ return await new Promise((resolve, reject) => setTimeout(resolve, 2000))
+}

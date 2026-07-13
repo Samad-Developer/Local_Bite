@@ -10,6 +10,8 @@ export type FieldConfig =
   | TextareaFieldConfig
   | SelectFieldConfig
   | SwitchFieldConfig
+  | DateFieldConfig
+  | MultiSelectFieldConfig
 
 interface BaseField {
   name: string
@@ -49,4 +51,15 @@ export interface SelectFieldConfig extends BaseField {
 
 export interface SwitchFieldConfig extends BaseField {
   type: "switch"
+}
+
+export interface DateFieldConfig extends BaseField {
+  type: "date"
+  placeholder?: string
+}
+
+export interface MultiSelectFieldConfig extends BaseField {
+  type: "multi-select"
+  options: { value: string; label: string }[]
+  placeholder?: string
 }

@@ -9,13 +9,20 @@ interface ImageUploadFieldProps {
   value: string[];
   onChange: (urls: string[]) => void;
   maxImages?: number;
+  multiple?: boolean; // false = single image only
+  aspect?: "square" | "video"; // defaults to "square"
 }
 
 export function ImageUploadField({
   value,
   onChange,
   maxImages = 4,
+  multiple = true,
+  aspect = "square",
 }: ImageUploadFieldProps) {
+  const effectiveMax = multiple ? maxImages : 1;
+  const aspectClass = aspect === "video" ? "aspect-video" : "aspect-square";
+
   function removeImage(url: string) {
     onChange(value.filter((u) => u !== url));
   }
@@ -23,22 +30,35 @@ export function ImageUploadField({
   return (
     <div className="space-y-3">
       <p className="text-sm font-medium text-[#374151]">
-        Images
-        <span className="text-xs text-[#9ca3af] font-normal ml-1">
-          (up to {maxImages}, first is main)
-        </span>
+        {multiple ? "Images" : "Image"}
+        {multiple && (
+          <span className="text-xs text-[#9ca3af] font-normal ml-1">
+            (up to {effectiveMax}, first is main)
+          </span>
+        )}
       </p>
 
       {value.length > 0 && (
-        <div className="grid grid-cols-4 gap-2">
+        <div
+          className={
+            multiple
+              ? "grid grid-cols-4 gap-2"
+              : "w-32" // single mode: one fixed-size tile, not a grid
+          }
+        >
           {value.map((url, index) => (
             <div key={url} className="relative group">
-              <div className="aspect-square rounded-lg overflow-hidden border border-[#e5e7eb] bg-[#f9fafb]">
+              <div
+                className={twMerge(
+                  "rounded-lg overflow-hidden border border-[#e5e7eb] bg-[#f9fafb]",
+                  aspectClass
+                )}
+              >
                 <Image
                   src={url}
                   alt={`Image ${index + 1}`}
-                  width={100}
-                  height={100}
+                  width={200}
+                  height={200}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -49,7 +69,7 @@ export function ImageUploadField({
               >
                 <X className="w-3 h-3 text-white" />
               </button>
-              {index === 0 && (
+              {multiple && index === 0 && (
                 <span className="absolute bottom-1 left-1 text-xs bg-black/60 text-white px-1 rounded">
                   Main
                 </span>
@@ -59,16 +79,16 @@ export function ImageUploadField({
         </div>
       )}
 
-      {value.length < maxImages && (
+      {value.length < effectiveMax && (
         <UploadButton
-          // Remove explicit generics to avoid "Cannot find name 'OurFileRouter'" and
-          // "Expected 1 type arguments, but got 2" errors in this file. Generics
-          // should be provided where OurFileRouter is defined (e.g., in a shared
-          // types file) if needed.
           endpoint="menuItemImage"
           onClientUploadComplete={(res) => {
             const newUrls = res.map((r) => r.url);
-            onChange([...value, ...newUrls].slice(0, maxImages));
+            onChange(
+              multiple
+                ? [...value, ...newUrls].slice(0, effectiveMax)
+                : newUrls.slice(0, 1) // single mode: replace, don't append
+            );
           }}
           onUploadError={(error) => console.error("Upload error:", error)}
           config={{ cn: twMerge }}

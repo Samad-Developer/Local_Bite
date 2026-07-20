@@ -50,7 +50,7 @@ const restaurantSettingsFields: FieldConfig[] = [
   {
     name: "phone",
     label: "Phone Number",
-    type: "number",
+    type: "text",
   },
   {
     name: "city",
@@ -88,13 +88,22 @@ const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
             className="grid grid-cols-3 gap-5"
           />
 
+          {/* Logo — single image */}
+          <ImageUploadField
+            value={form.watch("logoUrl") ? [form.watch("logoUrl")] : []}
+            multiple={false}
+            onChange={(urls) => form.setValue("logoUrl", urls[0] ?? "")}
+          />
+
+          {/* Cover images — multiple */}
           <ImageUploadField
             value={form.watch("coverImages") ?? []}
+            aspect="video"
             onChange={(urls) => form.setValue("coverImages", urls)}
           />
         </div>
 
-        <Button type="submit" size="lg" variant="default" className="w-full">
+        <Button type="submit" size="lg" variant="default" className="w-full mt-5">
           Create Settings
         </Button>
       </form>

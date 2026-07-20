@@ -52,9 +52,11 @@ export const MenuItemClient = ({ categories, item }: MenuItemClientProps) => {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
       <div className="space-y-4 mx-auto">
+
         <h1 className="text-2xl font-semibold text-[#111111] mb-4">
           {isEditing ? "Edit Product" : "Create Product"}
         </h1>
+        
         <FormRenderer
           fields={menuItemFields(categories)}
           control={form.control as Control<any>}

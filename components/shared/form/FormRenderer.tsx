@@ -200,7 +200,7 @@ export function FormRenderer({
             // ── Multi-select ────────────────────────────────
             if (field.type === "multi-select") {
               return (
-                <Field data-invalid={fieldState.invalid}>
+                <Field data-invalid={fieldState.invalid} className={field.className}>
                   <FieldLabel htmlFor={f.name}>{field.label}</FieldLabel>
                   <MultiSelectField
                     field={f}

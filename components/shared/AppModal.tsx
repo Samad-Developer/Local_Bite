@@ -19,7 +19,8 @@ interface ModalProps {
   isPending: boolean;
   isEditing: boolean;
   size?: "sm" | "md" | "lg";
-  // ── new props for form mode ──
+ 
+  // form fields
   formId?: string;
   onSubmit?: () => void;
 
@@ -47,7 +48,7 @@ export function AppModal({
   isFooter = true,
 }: ModalProps) {
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onClose} modal={false}>
       <DialogContent
         className={`
           bg-white border border-[#e5e7eb]

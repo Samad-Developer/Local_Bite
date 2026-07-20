@@ -2,21 +2,34 @@
 
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
+import { cacheTag } from "next/cache"
+import { getRestaurantId } from "@/lib/utils/auth-utils"
 
-export async function getCategories({ search }: { search?: string } = {}) {
-  const session = await auth()
-  if (!session) return []
+export async function getCategories() {
+  const restaurantId = await getRestaurantId()
+  return getCategoriesCached({ restaurantId })
+}
+
+async function getCategoriesCached({
+  restaurantId,
+  search,
+}: {
+  restaurantId: string
+  search?: string
+}) {
+  "use cache"
+  cacheTag(`categories-${restaurantId}`)
 
   return await prisma.category.findMany({
     where: {
-      restaurantId: session.user.restaurantId,
+      restaurantId,
       ...(search && {
-        name: { contains: search, mode: "insensitive" }
+        name: { contains: search, mode: "insensitive" },
       }),
     },
     orderBy: { sortOrder: "asc" },
-    include: { _count: { select: { menuItems: true } } }
+    include: { _count: { select: { menuItems: true } } },
   })
 }
 
@@ -37,7 +50,7 @@ export async function createCategory(data: {
     }
   })
 
-  revalidatePath("/menu/categories")
+  revalidatePath("/menu/categories");
   return { success: true }
 }
 

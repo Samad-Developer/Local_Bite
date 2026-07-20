@@ -1,4 +1,5 @@
-// for multiple select 
+"use client"
+
 import {
   Combobox,
   ComboboxChip,
@@ -75,3 +76,6 @@ export default function MultiSelectField({
     </Combobox>
   )
 }
+
+
+

@@ -72,7 +72,7 @@ model Restaurant {
   address        String?
   phone          String
   logoUrl        String?
-  coverImageUrl  String?
+  coverImages  RestaurantImage[]
   isOpen         Boolean          @default(true)
   dineIn         Boolean          @default(true)
   takeaway       Boolean          @default(true)
@@ -91,6 +91,15 @@ model Restaurant {
   orders         Order[]
   operatingHours OperatingHours[]
   discounts      Discount[]
+}
+
+model RestaurantImage {
+  id           String     @id @default(cuid())
+  url          String
+  sortOrder    Int        @default(0)
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
 }
 
 model User {

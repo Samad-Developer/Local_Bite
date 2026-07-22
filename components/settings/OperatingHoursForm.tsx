@@ -7,6 +7,9 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { OperatingHours } from "@/app/(main)/settings/config";
+import { updateHours } from "@/lib/actions/restaurant/settings";
+import { toast } from "sonner";
+import { Spinner } from "../ui/spinner";
 
 // ── Schema ─────────────────────────────────────────
 
@@ -60,9 +63,23 @@ export default function OperatingHoursForm({
     name: "hours",
   });
 
-  function onSubmit(data: FormValues) {
-    console.log(data);
-    // call server action here
+  async function onSubmit(data: FormValues) {
+    try {
+      const response = await updateHours(data.hours);
+
+      if (response?.success) {
+        toast.success(response.message ?? "Hours updated successfully.");
+        // update the form state to match the saved values
+        form.reset(data);
+      } else {
+        toast.error(response?.message ?? "Failed to update hours.");
+      }
+    } catch (error) {
+      // log and show a generic error message for unexpected failures
+      // eslint-disable-next-line no-console
+      console.error("Failed to update hours", error);
+      toast.error("An unexpected error occurred. Please try again.");
+    }
   }
 
   return (
@@ -131,7 +148,12 @@ export default function OperatingHoursForm({
           type="submit"
           className="bg-[#f97316] hover:bg-[#ea6c0a] text-white"
         >
-          Save Hours
+          {
+            form.formState.isSubmitting && <Spinner/>
+          }
+          {
+            form.formState.isSubmitting ? "Saving..." : "Save Hours"
+          }
         </Button>
       </div>
     </form>

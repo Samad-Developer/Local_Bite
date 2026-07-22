@@ -170,9 +170,11 @@ export async function updateMenuItem(data: {
     });
 
     if (data.imageUrls.length > 0) {
+      
       await tx.menuItemImage.deleteMany({
         where: { menuItemId: data.id },
       });
+      
       await tx.menuItemImage.createMany({
         data: data.imageUrls.map((url, index) => ({
           url,

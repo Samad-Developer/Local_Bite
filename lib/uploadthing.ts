@@ -4,7 +4,6 @@ import { auth } from "@/auth";
 const f = createUploadthing();
 
 export const ourFileRouter = {
-  
   menuItemImage: f({
     image: { maxFileSize: "4MB", maxFileCount: 4 },
   })

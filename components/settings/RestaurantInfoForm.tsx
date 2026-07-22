@@ -9,6 +9,9 @@ import { FormRenderer } from "../shared/form/FormRenderer";
 import { Control } from "react-hook-form";
 import { Button } from "../ui/button";
 import { ImageUploadField } from "../shared/image/image-upload-field";
+import { toast } from "sonner";
+import { Spinner } from "../ui/spinner";
+import { updateSettings } from "@/lib/actions/restaurant/settings";
 
 // ----- Types ----------------------------
 
@@ -62,6 +65,7 @@ const restaurantSettingsFields: FieldConfig[] = [
 // ------ Config Eng -------------------------
 
 const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
+
   const form = useForm<RestaurantInfoFormValues>({
     resolver: zodResolver(restaurantInfoSchema),
     defaultValues: {
@@ -74,8 +78,16 @@ const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
     },
   });
 
-  function onSubmit(data: RestaurantInfoFormValues) {
-    console.log("data", data);
+  async function onSubmit(data: RestaurantInfoFormValues) {
+
+      const response = await updateSettings(data);
+
+      if (response.success) {
+        toast.success(response.message);
+      } else {
+        toast.error("Failed to updated restarunt settings");
+      }
+ 
   }
 
   return (
@@ -103,8 +115,15 @@ const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
           />
         </div>
 
-        <Button type="submit" size="lg" variant="default" className="w-full mt-5">
-          Create Settings
+        <Button
+          type="submit"
+          size="lg"
+          variant="default"
+          className="w-full mt-5"
+          
+        >
+          {form.formState.isSubmitting && <Spinner/>}
+          {form.formState.isSubmitting ? "Creating..." : "Create"}
         </Button>
       </form>
     </div>

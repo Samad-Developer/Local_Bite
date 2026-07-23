@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { cacheLife, cacheTag, revalidatePath } from "next/cache";
+import { cacheLife, cacheTag, revalidatePath, revalidateTag, updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getRestaurantId } from "@/lib/utils/auth-utils";
 import { Prisma } from "@prisma/client";
@@ -70,7 +70,7 @@ export async function updateSettings(data: {
     });
   });
 
-  revalidatePath("/settings");
+  updateTag("restaurantInfo");
   return { success: true, message: "Restaurant Info Updted Successfully." };
 }
 
@@ -85,7 +85,6 @@ export async function updateHours(
   const restaurantId = await getRestaurantId();
 
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    
     await tx.operatingHours.deleteMany({
       where: {
         restaurantId: restaurantId,
@@ -101,9 +100,54 @@ export async function updateHours(
         closeTime: hour.closeTime,
       })),
     });
-
   });
 
-  revalidatePath("/settings")
+  updateTag("restaurantInfo");
   return { success: true, message: "Restaurant Open and Close Hours Updated" };
+}
+
+export async function updateOrderModes(data: {
+  dineIn: boolean;
+  takeaway: boolean;
+  delivery: boolean;
+  deliveryFee?: number | undefined;
+  minimumOrder?: number | undefined;
+  estimatedTime?: number | undefined;
+}) {
+  const restaurantId = await getRestaurantId();
+
+  await prisma.restaurant.update({
+    where: { id: restaurantId },
+    data: {
+      dineIn: data.dineIn,
+      takeaway: data.takeaway,
+      delivery: data.delivery,
+      deliveryFee: data.deliveryFee,
+      minimumOrder: data.minimumOrder,
+      estimatedTime: data.estimatedTime,
+    },
+  });
+
+  updateTag("restaurantInfo");
+  return { success: true, message: "Order modes updated successfully." };
+}
+
+export async function updatePaymentModes(data: {
+  acceptsCash: boolean;
+  acceptsCard: boolean;
+  acceptsOnline: boolean;
+}) {
+  const restaurantId = await getRestaurantId();
+
+  const updatedRestaurant = await prisma.restaurant.update({
+    where: { id: restaurantId },
+    data: {
+      acceptsCard: data.acceptsCard,
+      acceptsCash: data.acceptsCash,
+      acceptsOnline: data.acceptsOnline,
+    },
+  });
+
+  updateTag("restaurantInfo");
+  return { success: true, message: "Payment modes updated successfully." };
 }

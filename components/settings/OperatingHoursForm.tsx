@@ -84,7 +84,7 @@ export default function OperatingHoursForm({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
-      <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-5">
         {/* loop over 7 days */}
         {fields.map((field, index) => {
           // watch isOpen for THIS specific day

@@ -65,7 +65,6 @@ const restaurantSettingsFields: FieldConfig[] = [
 // ------ Config Eng -------------------------
 
 const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
-
   const form = useForm<RestaurantInfoFormValues>({
     resolver: zodResolver(restaurantInfoSchema),
     defaultValues: {
@@ -79,15 +78,13 @@ const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
   });
 
   async function onSubmit(data: RestaurantInfoFormValues) {
+    const response = await updateSettings(data);
 
-      const response = await updateSettings(data);
-
-      if (response.success) {
-        toast.success(response.message);
-      } else {
-        toast.error("Failed to updated restarunt settings");
-      }
- 
+    if (response.success) {
+      toast.success(response.message);
+    } else {
+      toast.error("Failed to updated restarunt settings");
+    }
   }
 
   return (
@@ -97,7 +94,7 @@ const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
           <FormRenderer
             fields={restaurantSettingsFields}
             control={form.control as Control<any>}
-            className="grid grid-cols-3 gap-5"
+            className="grid grid-cols-4 gap-5"
           />
 
           {/* Logo — single image */}
@@ -120,9 +117,8 @@ const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
           size="lg"
           variant="default"
           className="w-full mt-5"
-          
         >
-          {form.formState.isSubmitting && <Spinner/>}
+          {form.formState.isSubmitting && <Spinner />}
           {form.formState.isSubmitting ? "Creating..." : "Create"}
         </Button>
       </form>

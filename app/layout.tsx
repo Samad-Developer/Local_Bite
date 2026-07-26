@@ -1,13 +1,16 @@
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
-import { ourFileRouter } from "@/lib/uploadthing"
-import { extractRouterConfig } from "uploadthing/server"
+import { ourFileRouter } from "@/lib/uploadthing";
+import { extractRouterConfig } from "uploadthing/server";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
-import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin"
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { Toaster } from "@/components/ui/sonner";
+import { auth } from "@/auth";
+import { OrderNotificationProvider } from "@/components/providers/order-notification-provider";
+import { OrderBuzzer } from "@/components/providers/order-buzzer";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,25 +32,38 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
 
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
+      className={cn(
+        "h-full",
+        "antialiased",
+        geistSans.variable,
+        geistMono.variable,
+        "font-sans",
+        inter.variable,
+      )}
     >
       <body className="min-h-full flex flex-col overflow-hidden h-screen">
-        
         {/* uploadthing */}
         <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
-        
+
         {/* main content */}
         <main className="flex-1 overflow-y-auto bg-[#f5f5f5]">
-          {children}
+          {session?.user?.restaurantId ? (
+            <OrderNotificationProvider restaurantId={session.user.restaurantId}>
+              {children}
+              <OrderBuzzer />
+            </OrderNotificationProvider>
+          ) : (
+            children
+          )}
         </main>
 
         {/* toast */}
-        <Toaster position="top-center" richColors/>
-
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

@@ -70,7 +70,7 @@ const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
     defaultValues: {
       name: restaurant.name,
       address: restaurant.address || "",
-      city: restaurant.address || "",
+      city: restaurant.city || "",
       phone: restaurant.phone,
       logoUrl: restaurant.logoUrl || "",
       coverImages: restaurant.coverImages.map((coverImage) => coverImage.url),

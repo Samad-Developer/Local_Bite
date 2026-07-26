@@ -1,7 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
-import { cacheLife, cacheTag, revalidatePath, revalidateTag, updateTag } from "next/cache";
+import {  cacheTag, updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getRestaurantId } from "@/lib/utils/auth-utils";
 import { Prisma } from "@prisma/client";

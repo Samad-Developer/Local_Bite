@@ -146,7 +146,7 @@ export default function OperatingHoursForm({
       <div className="mt-6">
         <Button
           type="submit"
-          className="bg-[#f97316] hover:bg-[#ea6c0a] text-white"
+          className="bg-[#f97316] hover:bg-[#ea6c0a] text-white w-full"
         >
           {
             form.formState.isSubmitting && <Spinner/>

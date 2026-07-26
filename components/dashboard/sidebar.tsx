@@ -13,7 +13,7 @@ import {
   ChevronRight,
   LayoutGrid,
   Layers,
-  BadgePercent
+  BadgePercent,
 } from "lucide-react";
 import {
   Sidebar,
@@ -72,6 +72,13 @@ const navSections: NavSection[] = [
         children: [],
       },
       {
+        title: "Orders",
+        href: "/orders",
+        icon: ShoppingBag,
+        roles: ["OWNER", "MANAGER", "CASHIER"],
+        children: [],
+      },
+      {
         title: "Menu",
         href: "/menu",
         icon: UtensilsCrossed,
@@ -92,19 +99,12 @@ const navSections: NavSection[] = [
             href: "/menu/variants",
             icon: Layers,
           },
-           {
+          {
             title: "Discounts",
             href: "/menu/discounts",
             icon: BadgePercent,
           },
         ],
-      },
-      {
-        title: "Orders",
-        href: "/orders",
-        icon: ShoppingBag,
-        roles: ["OWNER", "MANAGER", "CASHIER"],
-        children: [],
       },
     ],
   },
@@ -163,7 +163,8 @@ function CollapsibleNavItem({
         <div
           className={`flex items-center rounded-lg transition-all duration-150
           ${open || isMenuOpen ? "bg-[#fff7ed]" : "hover:bg-[#f9f9f9]"}
-        `}>
+        `}
+        >
           <div
             className={`
             flex items-center gap-3 flex-1 px-3 py-2

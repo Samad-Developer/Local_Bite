@@ -2,7 +2,6 @@
 
 import { toast } from "sonner"
 import { useEffect, useMemo, useState } from "react"
-import PageHeader from "@/components/shared/PageHeader"
 import { DataTable } from "@/components/shared/DataTable"
 import { columns, type Order, filterTabs } from "./config"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -59,7 +58,6 @@ export default function OrdersRealtime({
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Orders" buttonLabel="" onButtonClick={() => {}} isAddNewButtonVisible={false} />
 
       <Tabs value={statusFilter} onValueChange={setStatusFilter}>
         <TabsList variant="line">

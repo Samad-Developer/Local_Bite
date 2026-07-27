@@ -219,7 +219,7 @@ function CollapsibleNavItem({
                       }
                     `}
                   >
-                    <Link href={child.href as any}>
+                    <Link href={child.href as any} prefetch={true}>
                       <ChildIcon
                         className={`
                         w-4 h-4 shrink-0
@@ -318,7 +318,7 @@ export default function AppSidebar({ role, name, email }: AppSidebarProps) {
                           }
                         `}
                       >
-                        <Link href={item.href as any}>
+                        <Link href={item.href as any} prefetch={true}>
                           <Icon
                             className={`
                             w-5 h-5 shrink-0

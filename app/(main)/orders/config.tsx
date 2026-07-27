@@ -162,7 +162,7 @@ export const columns: ColumnDef<Order>[] = [
     header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => (
       <div className="flex items-center justify-end">
-        <Link href={`/orders/${row.original.id}` as Route}>
+        <Link href={`/orders/${row.original.id}` as Route} prefetch={true}>
           <Button
             variant="ghost"
             size="icon"

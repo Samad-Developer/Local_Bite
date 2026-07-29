@@ -121,7 +121,7 @@ export function OrderNotificationProvider({
   }
 
   return (
-    <NotificationContext.Provider
+    <NotificationContext
       value={{
         activeOrder,
         dismissBuzzer,
@@ -130,6 +130,6 @@ export function OrderNotificationProvider({
       }}
     >
       {children}
-    </NotificationContext.Provider>
+    </NotificationContext>
   );
 }

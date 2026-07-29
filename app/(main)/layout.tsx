@@ -4,10 +4,10 @@ import { redirect } from "next/navigation"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import AppSidebar from "@/components/dashboard/sidebar"
 import Header from "@/components/dashboard/header"
-import { connection } from "next/server"
+// import { connection } from "next/server"
 
 async function AuthedShell({ children }: { children: React.ReactNode }) {
-  await connection();
+  // await connection();
   const session = await auth()
   if (!session) redirect("/login")
 

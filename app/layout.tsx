@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { auth } from "@/auth";
 import { OrderNotificationProvider } from "@/components/providers/order-notification-provider";
 import { OrderBuzzer } from "@/components/providers/order-buzzer";
-import { connection } from "next/server";
+// import { connection } from "next/server";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -29,7 +29,7 @@ async function SessionAwareContent({
 }: {
   children: React.ReactNode;
 }) {
-  await connection();
+  // await connection();
   const session = await auth();
 
   return session?.user?.restaurantId ? (

@@ -1,10 +1,9 @@
-// page.tsx
 import { Suspense } from "react";
 import { getCategories } from "@/lib/actions/categories/categories";
 import CategoriesClient from "./categories-client";
 
 async function CategoriesData() {
-  const categories = await getCategories(); // auth() runs here, inside Suspense
+  const categories = await getCategories();
   return <CategoriesClient categories={categories} />;
 }
 

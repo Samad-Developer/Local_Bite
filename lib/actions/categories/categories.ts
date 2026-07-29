@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
-import { revalidatePath, revalidateTag } from "next/cache"
+import { cacheLife, revalidatePath, revalidateTag } from "next/cache"
 import { cacheTag } from "next/cache"
 import { getRestaurantId } from "@/lib/utils/auth-utils"
 
@@ -20,6 +20,7 @@ async function getCategoriesCached({
 }) {
   "use cache"
   cacheTag(`categories-${restaurantId}`)
+  cacheLife("hours")
 
   return await prisma.category.findMany({
     where: {

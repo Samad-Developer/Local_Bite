@@ -1,3 +1,5 @@
+"use client"
+
 import { Control } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { FieldConfig } from "./field-config.types";

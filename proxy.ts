@@ -68,6 +68,7 @@ export const config = {
     "/menu/:path*",
     "/orders/:path*",
     "/settings/:path*",
+    "/delivery-areas/:path*", 
     "/login",
     "/register",
   ],

@@ -14,6 +14,7 @@ import {
   LayoutGrid,
   Layers,
   BadgePercent,
+  MapPin
 } from "lucide-react";
 import {
   Sidebar,
@@ -116,6 +117,19 @@ const navSections: NavSection[] = [
         href: "/settings",
         icon: Settings,
         roles: ["OWNER"],
+        children: [],
+      },
+    ],
+    
+  },
+    {
+    label: "Management",
+    items: [
+        {
+        title: "Delivery Areas",
+        href: "/delivery-areas",
+        icon: MapPin,
+        roles: ["OWNER", "MANAGER"],
         children: [],
       },
     ],

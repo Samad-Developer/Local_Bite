@@ -118,7 +118,6 @@ export async function GET(
           id: true,
           name: true,
           deliveryFee: true,
-          minimumOrder: true,
         }
       })
     ])

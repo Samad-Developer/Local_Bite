@@ -9,7 +9,7 @@ export async function GET(
     const { slug } = await params
 
     const restaurant = await prisma.restaurant.findUnique({
-      where: { slug },
+      where: { id: slug },
       select: {
         id: true,
         name: true,

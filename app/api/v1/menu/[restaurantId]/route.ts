@@ -8,120 +8,154 @@ export async function GET(
   try {
     const { restaurantId } = await params
 
-    // fetch all visible categories with available items
-    const categories = await prisma.category.findMany({
-      where: {
-        restaurantId,
-        isVisible: true,
-      },
-      orderBy: { sortOrder: "asc" },
-      select: {
-        id: true,
-        name: true,
-        sortOrder: true,
-        menuItems: {
-          where: { isAvailable: true },
-          orderBy: { sortOrder: "asc" },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            isAvailable: true,
-            isBestseller: true,
-            isNew: true,
-            spicyLevel: true,
-            foodType: true,
-            images: {
-              orderBy: { sortOrder: "asc" },
-              take: 1,
-              select: { url: true }
-            },
-            variants: {
-              where: { isAvailable: true },
-              orderBy: { sortOrder: "asc" },
-              select: {
-                id: true,
-                name: true,
-                price: true,
-                isDefault: true,
-                sortOrder: true,
-                addonGroups: {
-                  orderBy: { sortOrder: "asc" },
-                  select: {
-                    id: true,
-                    name: true,
-                    isRequired: true,
-                    isMultiple: true,
-                    minSelections: true,
-                    maxSelections: true,
-                    sortOrder: true,
-                    addons: {
-                      where: { isAvailable: true },
-                      orderBy: { sortOrder: "asc" },
-                      select: {
-                        id: true,
-                        name: true,
-                        price: true,
-                        sortOrder: true,
+    // fetch categories and delivery areas in parallel
+    const [categories, deliveryAreas] = await Promise.all([
+      prisma.category.findMany({
+        where: {
+          restaurantId,
+          isVisible: true,
+        },
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          name: true,
+          sortOrder: true,
+          menuItems: {
+            where: { isAvailable: true },
+            orderBy: { sortOrder: "asc" },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              isAvailable: true,
+              isBestseller: true,
+              isNew: true,
+              spicyLevel: true,
+              foodType: true,
+              images: {
+                orderBy: { sortOrder: "asc" },
+                take: 1,
+                select: { url: true }
+              },
+              variants: {
+                where: { isAvailable: true },
+                orderBy: { sortOrder: "asc" },
+                select: {
+                  id: true,
+                  name: true,
+                  price: true,
+                  isDefault: true,
+                  sortOrder: true,
+                  addonGroups: {
+                    orderBy: { sortOrder: "asc" },
+                    select: {
+                      id: true,
+                      name: true,
+                      isRequired: true,
+                      isMultiple: true,
+                      minSelections: true,
+                      maxSelections: true,
+                      sortOrder: true,
+                      addons: {
+                        where: { isAvailable: true },
+                        orderBy: { sortOrder: "asc" },
+                        select: {
+                          id: true,
+                          name: true,
+                          price: true,
+                          sortOrder: true,
+                        }
                       }
                     }
                   }
                 }
-              }
-            },
-            discounts: {
-              where: {
-                discount: {
-                  isActive: true,
-                  OR: [
-                    { endDate: null },
-                    { endDate: { gte: new Date() } },
-                    { startDate: null },
-                    { startDate: { lte: new Date() } },
-                  ]
-                }
               },
-              select: {
-                discount: {
-                  select: {
-                    id: true,
-                    name: true,
-                    type: true,
-                    value: true,
+              discounts: {
+                where: {
+                  discount: {
+                    isActive: true,
+                    AND: [
+                      {
+                        OR: [
+                          { startDate: null },
+                          { startDate: { lte: new Date() } }
+                        ]
+                      },
+                      {
+                        OR: [
+                          { endDate: null },
+                          { endDate: { gte: new Date() } }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                take: 1,
+                select: {
+                  discount: {
+                    select: {
+                      id: true,
+                      name: true,
+                      type: true,
+                      value: true,
+                    }
                   }
                 }
-              },
-              take: 1,
+              }
             }
           }
         }
-      }
-    })
+      }),
 
-    // compute final price for each item
-    const categoriesWithPricing = categories.map((category) => ({
-      ...category,
+      // fetch active delivery areas
+      prisma.deliveryArea.findMany({
+        where: {
+          restaurantId,
+          isActive: true,
+        },
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          name: true,
+          deliveryFee: true,
+          minimumOrder: true,
+        }
+      })
+    ])
+
+    // process categories
+    const result = categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      sortOrder: category.sortOrder,
       menuItems: category.menuItems.map((item) => {
         const activeDiscount = item.discounts[0]?.discount ?? null
 
-        // compute final price per variant
-        const variantsWithFinalPrice = item.variants.map((variant) => ({
+        const variants = item.variants.map((variant) => ({
           ...variant,
-          finalPrice: computeDiscountedPrice(variant.price, activeDiscount),
+          finalPrice: computeFinalPrice(variant.price, activeDiscount),
         }))
 
         return {
-          ...item,
-          variants: variantsWithFinalPrice,
-          activeDiscount,
-          discounts: undefined, // clean up raw discounts from response
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          isAvailable: item.isAvailable,
+          isBestseller: item.isBestseller,
+          isNew: item.isNew,
+          spicyLevel: item.spicyLevel,
+          foodType: item.foodType,
+          images: item.images,
+          variants,
+          discount: activeDiscount ?? null,
         }
       })
     }))
 
     return NextResponse.json({
-      categories: categoriesWithPricing,
-      totalItems: categories.reduce(
+      categories: result,
+      deliveryAreas,
+      totalItems: result.reduce(
         (sum, cat) => sum + cat.menuItems.length, 0
       ),
     })
@@ -135,21 +169,16 @@ export async function GET(
   }
 }
 
-// ── Utility ────────────────────────────────────────
-
-function computeDiscountedPrice(
+function computeFinalPrice(
   price: number,
   discount: { type: string; value: number } | null
 ): number {
   if (!discount) return price
-
   if (discount.type === "PERCENTAGE") {
     return Math.max(0, price - (price * discount.value) / 100)
   }
-
   if (discount.type === "FIXED") {
     return Math.max(0, price - discount.value)
   }
-
   return price
 }

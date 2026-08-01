@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-// Validation schema for incoming order
 const orderSchema = z.object({
   restaurantId: z.string(),
   customerName: z.string().min(1),
@@ -11,6 +10,7 @@ const orderSchema = z.object({
   type: z.enum(["DINE_IN", "TAKEAWAY", "DELIVERY"]),
   paymentMethod: z.enum(["CASH", "CARD", "ONLINE"]),
   specialNotes: z.string().optional(),
+  deliveryAreaId: z.string().optional(),       // ← added
   items: z.array(z.object({
     menuItemId: z.string(),
     quantity: z.number().min(1),
@@ -34,11 +34,8 @@ const orderSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-
-    // validate incoming data
     const data = orderSchema.parse(body)
 
-    // create order with all items in one transaction
     const order = await prisma.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
         data: {
@@ -49,6 +46,7 @@ export async function POST(request: Request) {
           type: data.type,
           paymentMethod: data.paymentMethod,
           specialNotes: data.specialNotes,
+          deliveryAreaId: data.deliveryAreaId ?? null,   // ← added
           subtotal: data.subtotal,
           deliveryFee: data.deliveryFee ?? 0,
           total: data.total,
@@ -57,7 +55,6 @@ export async function POST(request: Request) {
         }
       })
 
-      // create each order item
       for (const item of data.items) {
         const orderItem = await tx.orderItem.create({
           data: {
@@ -66,12 +63,10 @@ export async function POST(request: Request) {
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             totalPrice: item.totalPrice,
-            // specialInstructions: item.specialInstructions,
-            
+            specialInstructions: item.specialInstructions,
           }
         })
 
-        // create variant snapshot if exists
         if (item.variantId && item.variantName && item.variantPrice !== undefined) {
           await tx.orderItemVariant.create({
             data: {
@@ -83,7 +78,6 @@ export async function POST(request: Request) {
           })
         }
 
-        // create addon snapshots
         if (item.addons && item.addons.length > 0) {
           await tx.orderItemAddon.createMany({
             data: item.addons.map((addon) => ({
@@ -99,10 +93,6 @@ export async function POST(request: Request) {
       return newOrder
     })
 
-    // Supabase trigger fires automatically here
-    // No manual broadcast needed
-    // The database trigger we created handles it
-
     return NextResponse.json({
       success: true,
       orderId: order.id,
@@ -117,7 +107,6 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
-
     console.error("Order creation failed:", error)
     return NextResponse.json(
       { error: "Failed to place order" },

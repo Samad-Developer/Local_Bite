@@ -149,7 +149,7 @@ export async function GET(
           discount: activeDiscount ?? null,
         }
       })
-    }))
+    })).filter((category) => category.menuItems.length > 0)
 
     return NextResponse.json({
       categories: result,

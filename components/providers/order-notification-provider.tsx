@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/supabaseClient";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { playOrderAlert, unlockOrderAlert } from "@/lib/utils/sound";
 
 type NewOrderData = {
   id: string;
@@ -43,7 +44,6 @@ export function OrderNotificationProvider({
   const [activeOrder, setActiveOrder] = useState<NewOrderData>(null);
   const [lastOrderChange, setLastOrderChange] =
     useState<OrderChangeEvent>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -51,6 +51,23 @@ export function OrderNotificationProvider({
         Notification.requestPermission();
       }
     }
+  }, []);
+
+  // Autoplay policy: audio stays blocked until the user interacts with the page
+  // at least once. Unlock on the first gesture so the alert can fire later on
+  // its own, when the order arrives and nobody is touching the screen.
+  useEffect(() => {
+    function unlock() {
+      unlockOrderAlert();
+    }
+
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
   }, []);
 
   useEffect(() => {
@@ -70,14 +87,8 @@ export function OrderNotificationProvider({
 
           // Sirf INSERT par hi buzzer/sound/notification chalega
           if (eventType === "INSERT") {
-            
-            try {
-              if (!audioRef.current) {
-                audioRef.current = new Audio("/sounds/order-alert.mp3");
-              }
-              audioRef.current.currentTime = 0;
-              audioRef.current.play();
-            } catch (e) {}
+
+            playOrderAlert();
 
             if (typeof window !== "undefined" && "Notification" in window) {
               if (Notification.permission === "granted") {

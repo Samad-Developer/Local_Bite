@@ -68,6 +68,7 @@
   --color-title: var(--title);
   --color-heading: var(--heading);
   --color-label: var(--label);
+  --color-soft: var(--soft);
   --color-muted: var(--muted);
 }
 
@@ -122,11 +123,14 @@
   --brand-subtle: #fff7ed;
   --brand-border: #fed7aa;
 
-  /* Text */
-  --title: #111111;
+  /* Text — contrast ratios are against --surface (#ffffff).
+     Anything below 4.5:1 is not legible as body copy, which is why
+     --muted is reserved for non-text use only. */
+  --title: #111111;   /* headings, figures      19.0:1 */
   --heading: #111111;
-  --label: #6b7280;
-  --muted: #9ca3af;
+  --label: #4b5563;   /* subtitles, axis labels  7.6:1 */
+  --soft: #6b7280;    /* meta, footnotes         4.8:1 */
+  --muted: #9ca3af;   /* NOT for text — shadcn's bg-muted reads this */
 }
 
 .dark {

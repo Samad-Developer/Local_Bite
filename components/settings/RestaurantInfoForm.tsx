@@ -7,10 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FieldConfig } from "../shared/form/field-config.types";
 import { FormRenderer } from "../shared/form/FormRenderer";
 import { Control } from "react-hook-form";
-import { Button } from "../ui/button";
 import { ImageUploadField } from "../shared/image/image-upload-field";
 import { toast } from "sonner";
-import { Spinner } from "../ui/spinner";
+import { SettingsSection } from "./SettingsSection";
+import { SettingsSubmitButton } from "./SettingsSubmitButton";
 import { updateSettings } from "@/lib/actions/restaurant/settings";
 
 // ----- Types ----------------------------
@@ -38,31 +38,47 @@ const restaurantInfoSchema = z.object({
 type RestaurantInfoFormValues = z.infer<typeof restaurantInfoSchema>;
 
 // ------ Config Start -------------------------
+// Split into rows rather than one flat array: FormRenderer lays its fields
+// out with a single className, so separate calls are how each row gets its
+// own column count without the renderer needing to know about spans.
 
-const restaurantSettingsFields: FieldConfig[] = [
+const identityFields: FieldConfig[] = [
   {
     name: "name",
-    label: "Restaurnt Name",
+    label: "Restaurant name",
     type: "text",
+    placeholder: "e.g. Spice Garden",
+    description: "Shown to customers across your storefront and receipts.",
   },
-  {
-    name: "address",
-    label: "Full Address",
-    type: "text",
-  },
+];
+
+const contactFields: FieldConfig[] = [
   {
     name: "phone",
-    label: "Phone Number",
+    label: "Phone number",
     type: "text",
+    placeholder: "e.g. 0300 1234567",
+    description: "Customers call this number about their orders.",
   },
   {
     name: "city",
     label: "City",
     type: "text",
+    placeholder: "e.g. Karachi",
   },
 ];
 
-// ------ Config Eng -------------------------
+const addressFields: FieldConfig[] = [
+  {
+    name: "address",
+    label: "Full address",
+    type: "text",
+    placeholder: "Street, area and any landmark",
+    description: "Used for pickup directions and delivery rider handoff.",
+  },
+];
+
+// ------ Config End -------------------------
 
 const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
   const form = useForm<RestaurantInfoFormValues>({
@@ -78,51 +94,80 @@ const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
   });
 
   async function onSubmit(data: RestaurantInfoFormValues) {
-    const response = await updateSettings(data);
+    try {
+      const response = await updateSettings(data);
 
-    if (response.success) {
-      toast.success(response.message);
-    } else {
-      toast.error("Failed to updated restarunt settings");
+      if (response?.success) {
+        toast.success(response.message ?? "Restaurant details saved.");
+        form.reset(data);
+      } else {
+        toast.error(response?.message ?? "Failed to save restaurant details.");
+      }
+    } catch (error) {
+      console.error("Failed to save restaurant details", error);
+      toast.error("An unexpected error occurred. Please try again.");
     }
   }
 
+  const control = form.control as Control<any>;
+  const logoUrl = form.watch("logoUrl");
+  const coverImages = form.watch("coverImages");
+
   return (
-    <div>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="space-y-3">
-          <FormRenderer
-            fields={restaurantSettingsFields}
-            control={form.control as Control<any>}
-            className="grid grid-cols-4 gap-5"
-          />
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      {/* ── Details ── */}
+      <SettingsSection
+        title="Restaurant details"
+        description="The basics customers see when they find you."
+        contentClassName="p-5 space-y-5"
+      >
+        <FormRenderer
+          fields={identityFields}
+          control={control}
+          className="grid gap-5"
+        />
+        <FormRenderer
+          fields={contactFields}
+          control={control}
+          className="grid gap-5 sm:grid-cols-2"
+        />
+        <FormRenderer
+          fields={addressFields}
+          control={control}
+          className="grid gap-5"
+        />
+      </SettingsSection>
 
-          {/* Logo — single image */}
-          <ImageUploadField
-            value={form.watch("logoUrl") ? [form.watch("logoUrl")] : []}
-            multiple={false}
-            onChange={(urls) => form.setValue("logoUrl", urls[0] ?? "")}
-          />
+      {/* ── Branding ── */}
+      <SettingsSection
+        title="Logo & banner images"
+        description="Your visual identity on the storefront."
+        contentClassName="p-5 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8"
+      >
+        <ImageUploadField
+          label="Logo"
+          hint="A square mark. Appears beside your name in listings, the dashboard and order confirmations."
+          value={logoUrl ? [logoUrl] : []}
+          multiple={false}
+          onChange={(urls) => form.setValue("logoUrl", urls[0] ?? "")}
+        />
 
-          {/* Cover images — multiple */}
+        <div className="lg:border-l lg:border-border lg:pl-8">
           <ImageUploadField
-            value={form.watch("coverImages") ?? []}
+            label="Banner images"
+            hint="Wide shots of your food or dining room, up to 4. The first one heads your storefront page."
+            value={coverImages ?? []}
             aspect="video"
             onChange={(urls) => form.setValue("coverImages", urls)}
           />
         </div>
+      </SettingsSection>
 
-        <Button
-          type="submit"
-          size="lg"
-          variant="default"
-          className="w-full mt-5"
-        >
-          {form.formState.isSubmitting && <Spinner />}
-          {form.formState.isSubmitting ? "Creating..." : "Create"}
-        </Button>
-      </form>
-    </div>
+      <SettingsSubmitButton
+        label="Save restaurant details"
+        isSubmitting={form.formState.isSubmitting}
+      />
+    </form>
   );
 };
 

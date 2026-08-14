@@ -6,8 +6,8 @@ import z from "zod";
 import { FieldConfig } from "../shared/form/field-config.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormRenderer } from "../shared/form/FormRenderer";
-import { Button } from "../ui/button";
-import { Spinner } from "../ui/spinner";
+import { SettingsSection } from "./SettingsSection";
+import { SettingsSubmitButton } from "./SettingsSubmitButton";
 import { updateOrderModes } from "@/lib/actions/restaurant/settings";
 import { toast } from "sonner";
 
@@ -25,40 +25,52 @@ const orderModeSchema = z.object({
 type orderModesFormValues = z.infer<typeof orderModeSchema>;
 
 // ------ Form fields -----------------------
+// Grouped rather than flat: the switches want a divided list and the
+// numbers want a grid, and FormRenderer lays out one array with one
+// className. Field order within each group matches the original array.
 
-const orderModesFormFields: FieldConfig[] = [
+const channelFields: FieldConfig[] = [
   {
     name: "delivery",
     label: "Delivery",
     type: "switch",
-    description: "When you on it delivery will be availbe on your webiste",
+    description: "Riders take orders out to the customer's address.",
   },
   {
     name: "dineIn",
-    label: "Dine In",
+    label: "Dine in",
     type: "switch",
-    description: "When you on it dineIn will be availbe on your webiste",
+    description: "Customers order for a table in your restaurant.",
   },
   {
     name: "takeaway",
-    label: "Take Away",
+    label: "Takeaway",
     type: "switch",
-    description: "When you on it take away will be availbe on your webiste",
+    description: "Customers order ahead and collect at the counter.",
   },
+];
+
+const orderRuleFields: FieldConfig[] = [
   {
     name: "minimumOrder",
-    label: "Minimum Order",
+    label: "Minimum order",
     type: "number",
+    description: "Smallest basket total you will accept.",
   },
+];
+
+const deliveryRuleFields: FieldConfig[] = [
   {
     name: "deliveryFee",
-    label: "Delivery Fee",
+    label: "Delivery fee",
     type: "number",
+    description: "Flat charge added to delivery orders.",
   },
   {
     name: "estimatedTime",
-    label: "Estimated Time",
+    label: "Estimated time",
     type: "number",
+    description: "Typical minutes from order to doorstep.",
   },
 ];
 
@@ -81,16 +93,19 @@ const OrderModesForm = ({
     },
   });
 
-  const isDeliveryEnabled = useWatch({
-    control: form.control,
-    name: "delivery",
-  });
+  const values = useWatch({ control: form.control });
+  const isDeliveryEnabled = values?.delivery ?? false;
+  const enabledChannels = [
+    values?.dineIn,
+    values?.takeaway,
+    values?.delivery,
+  ].filter(Boolean).length;
 
-  const visibleFields = orderModesFormFields.filter(
-    (field) =>
-      isDeliveryEnabled ||
-      !["deliveryFee", "estimatedTime"].includes(field.name),
-  );
+  // Same rule as before: the delivery-only numbers drop out when delivery
+  // is off, while the minimum order stays put.
+  const visibleRuleFields = isDeliveryEnabled
+    ? [...orderRuleFields, ...deliveryRuleFields]
+    : orderRuleFields;
 
   async function onSubmit(data: orderModesFormValues) {
     try {
@@ -105,32 +120,64 @@ const OrderModesForm = ({
       }
     } catch (error) {
       // log and show a generic error message for unexpected failures
-      // eslint-disable-next-line no-console
       console.error("Failed to update order modes", error);
       toast.error("An unexpected error occurred. Please try again.");
     }
   }
 
-  return (
-    <div>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <FormRenderer
-          fields={visibleFields}
-          control={form.control as Control<any>}
-          className="grid grid-cols-3 gap-5"
-        />
+  const control = form.control as Control<any>;
 
-        <Button
-          type="submit"
-          size="lg"
-          variant="default"
-          className="w-full mt-5"
-        >
-          {form.formState.isSubmitting && <Spinner />}
-          {form.formState.isSubmitting ? "Updating..." : "Update Order Mode"}
-        </Button>
-      </form>
-    </div>
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <SettingsSection
+        title="Order channels"
+        description="The ways customers can order from you."
+        contentClassName="px-5"
+        action={
+          <span className="text-xs text-label tabular-nums">
+            <span className="font-semibold text-title">{enabledChannels}</span>{" "}
+            of 3 active
+          </span>
+        }
+      >
+        {/* Row treatment comes from the wrapper — FormRenderer emits one
+            [data-slot=field] per entry, so dividers and padding are applied
+            without the renderer needing to know about them. */}
+        <FormRenderer
+          fields={channelFields}
+          control={control}
+          className="divide-y divide-border [&>[data-slot=field]]:py-4"
+        />
+      </SettingsSection>
+
+      {enabledChannels === 0 && (
+        <p className="text-xs text-[#dc2626] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-3.5 py-2.5">
+          Every channel is off — your storefront has no way for customers to
+          order.
+        </p>
+      )}
+
+      <SettingsSection
+        title={isDeliveryEnabled ? "Order & delivery rules" : "Order rules"}
+        description={
+          isDeliveryEnabled
+            ? "Thresholds and charges applied at checkout."
+            : "Turn delivery on to set a delivery fee and estimated time."
+        }
+        contentClassName="p-5"
+      >
+        <FormRenderer
+          fields={visibleRuleFields}
+          control={control}
+          className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3"
+        />
+      </SettingsSection>
+
+      <SettingsSubmitButton
+        label="Save order modes"
+        isSubmitting={form.formState.isSubmitting}
+      />
+    </form>
   );
 };
 

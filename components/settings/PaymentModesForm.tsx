@@ -5,8 +5,8 @@ import { FieldConfig } from "../shared/form/field-config.types";
 import { Control, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormRenderer } from "../shared/form/FormRenderer";
-import { Button } from "../ui/button";
-import { Spinner } from "../ui/spinner";
+import { SettingsSection } from "./SettingsSection";
+import { SettingsSubmitButton } from "./SettingsSubmitButton";
 import { toast } from "sonner";
 import { updatePaymentModes } from "@/lib/actions/restaurant/settings";
 
@@ -25,21 +25,21 @@ type paymentModesFormValues = z.infer<typeof paymentModeSchema>;
 const paymentModesFormFields: FieldConfig[] = [
   {
     name: "acceptsCash",
-    label: "Accept Cash",
+    label: "Cash on delivery",
     type: "switch",
-    description: "Enable if you want COD on your Website",
+    description: "Customers pay the rider or at the counter when they collect.",
   },
   {
     name: "acceptsCard",
-    label: "Accept Card",
+    label: "Card",
     type: "switch",
-    description: "Enable If you want CARD pyment",
+    description: "Card payment taken on the machine at handover.",
   },
   {
     name: "acceptsOnline",
-    label: "Accept Online Bank Transfer",
+    label: "Online bank transfer",
     type: "switch",
-    description: "Enable if you want online pyment transfer",
+    description: "Customers transfer the total before the order is confirmed.",
   },
 ];
 
@@ -75,26 +75,48 @@ const PaymentModesForm = ({
     }
   }
 
+  const values = form.watch();
+  const enabledCount = [
+    values.acceptsCash,
+    values.acceptsCard,
+    values.acceptsOnline,
+  ].filter(Boolean).length;
+
   return (
-    <div>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <SettingsSection
+        title="Payment methods"
+        description="Published to your storefront so customers know how they can pay."
+        contentClassName="px-5"
+        action={
+          <span className="text-xs text-label tabular-nums">
+            <span className="font-semibold text-title">{enabledCount}</span> of 3
+            enabled
+          </span>
+        }
+      >
+        {/* Row styling comes from the wrapper: FormRenderer renders one
+            [data-slot=field] per entry, so the divider and padding can be
+            applied without the renderer knowing anything about it. */}
         <FormRenderer
           fields={paymentModesFormFields}
           control={form.control as Control<any>}
-          className="grid grid-cols-3"
+          className="divide-y divide-border [&>[data-slot=field]]:py-4"
         />
+      </SettingsSection>
 
-        <Button
-          type="submit"
-          size="lg"
-          variant="default"
-          className="w-full mt-5"
-        >
-          {form.formState.isSubmitting && <Spinner />}
-          {form.formState.isSubmitting ? "Updating..." : "Update Payment Mode"}
-        </Button>
-      </form>
-    </div>
+      {enabledCount === 0 && (
+        <p className="text-xs text-[#dc2626] bg-[#fef2f2] border border-[#fecaca] rounded-lg px-3.5 py-2.5">
+          All three are switched off — your storefront has no payment option to
+          show customers.
+        </p>
+      )}
+
+      <SettingsSubmitButton
+        label="Save payment modes"
+        isSubmitting={form.formState.isSubmitting}
+      />
+    </form>
   );
 };
 

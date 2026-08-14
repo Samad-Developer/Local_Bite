@@ -1,15 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { OperatingHours } from "@/app/(main)/settings/config";
 import { updateHours } from "@/lib/actions/restaurant/settings";
 import { toast } from "sonner";
-import { Spinner } from "../ui/spinner";
+import { cn } from "@/lib/utils";
+import { SettingsSection } from "./SettingsSection";
+import { SettingsSubmitButton } from "./SettingsSubmitButton";
 
 // ── Schema ─────────────────────────────────────────
 
@@ -27,6 +29,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 // ── Day names ──────────────────────────────────────
+// OperatingHours stores Monday as day 0.
 
 const dayNames = [
   "Monday",
@@ -37,6 +40,12 @@ const dayNames = [
   "Saturday",
   "Sunday",
 ];
+
+// A native time input renders "09:00 AM" plus its own picker icon, so it
+// needs real room. shrink-0 matters just as much as the width: Input's base
+// class sets min-w-0, which lets the flex row squeeze the control until the
+// meridiem is clipped off.
+const TIME_INPUT_CLASS = "w-40 shrink-0 tabular-nums";
 
 // ── Component ──────────────────────────────────────
 
@@ -63,6 +72,18 @@ export default function OperatingHoursForm({
     name: "hours",
   });
 
+  // One subscription for the whole array rather than one per row — the
+  // rows only need to know whether their own day is open.
+  const hours = form.watch("hours");
+  const openCount = hours?.filter((h) => h?.isOpen).length ?? 0;
+
+  // Resolved after mount: computing "today" during render would risk a
+  // hydration mismatch across a midnight boundary.
+  const [todayIndex, setTodayIndex] = useState<number | null>(null);
+  useEffect(() => {
+    setTodayIndex((new Date().getDay() + 6) % 7);
+  }, []);
+
   async function onSubmit(data: FormValues) {
     try {
       const response = await updateHours(data.hours);
@@ -76,29 +97,53 @@ export default function OperatingHoursForm({
       }
     } catch (error) {
       // log and show a generic error message for unexpected failures
-      // eslint-disable-next-line no-console
       console.error("Failed to update hours", error);
       toast.error("An unexpected error occurred. Please try again.");
     }
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <div className="grid grid-cols-2 gap-5">
-        {/* loop over 7 days */}
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <SettingsSection
+        title="Operating hours"
+        description="When customers can place orders. Closed days are skipped at checkout."
+        contentClassName="divide-y divide-border"
+        action={
+          <span className="text-xs text-label tabular-nums">
+            Open{" "}
+            <span className="font-semibold text-title">{openCount}</span> of 7
+            days
+          </span>
+        }
+      >
         {fields.map((field, index) => {
-          // watch isOpen for THIS specific day
-          const isOpen = form.watch(`hours.${index}.isOpen`);
+          const isOpen = hours?.[index]?.isOpen ?? false;
+          const isToday = todayIndex === field.day;
 
           return (
             <div
               key={field.id}
-              className="flex items-center gap-4 p-3 bg-white border border-[#e5e7eb] rounded-lg"
+              className={cn(
+                "flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-3.5 transition-colors duration-150",
+                isToday && "bg-brand-subtle/60",
+              )}
             >
               {/* Day name — static, from dayNames array */}
-              <span className="w-28 text-sm font-medium text-[#111111]">
-                {dayNames[field.day]}
-              </span>
+              <div className="flex items-center gap-2 w-36 shrink-0">
+                <span
+                  className={cn(
+                    "text-sm",
+                    isOpen ? "font-medium text-title" : "text-label",
+                  )}
+                >
+                  {dayNames[field.day]}
+                </span>
+                {isToday && (
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-brand">
+                    Today
+                  </span>
+                )}
+              </div>
 
               {/* isOpen toggle */}
               <Controller
@@ -109,53 +154,62 @@ export default function OperatingHoursForm({
                 )}
               />
 
-              {/* openTime — disabled when isOpen is false */}
-              <Controller
-                name={`hours.${index}.openTime`}
-                control={form.control}
-                render={({ field: f }) => (
-                  <Input
-                    {...f}
-                    type="time"
-                    disabled={!isOpen}
-                    className="w-32 bg-white border-[#e5e7eb] h-9 disabled:opacity-40"
-                  />
+              <span
+                className={cn(
+                  "text-xs font-medium w-14 shrink-0",
+                  isOpen ? "text-[#16a34a]" : "text-soft",
                 )}
-              />
+              >
+                {isOpen ? "Open" : "Closed"}
+              </span>
 
-              <span className="text-xs text-[#9ca3af]">to</span>
-
-              {/* closeTime — disabled when isOpen is false */}
-              <Controller
-                name={`hours.${index}.closeTime`}
-                control={form.control}
-                render={({ field: f }) => (
-                  <Input
-                    {...f}
-                    type="time"
-                    disabled={!isOpen}
-                    className="w-32 bg-white border-[#e5e7eb] h-9 disabled:opacity-40"
-                  />
+              {/* Times stay mounted when closed so the values survive a
+                  toggle — they are only disabled and dimmed. */}
+              <div
+                className={cn(
+                  "flex items-center gap-2 ml-auto transition-opacity duration-150",
+                  !isOpen && "opacity-55",
                 )}
-              />
+              >
+                <Controller
+                  name={`hours.${index}.openTime`}
+                  control={form.control}
+                  render={({ field: f }) => (
+                    <Input
+                      {...f}
+                      type="time"
+                      aria-label={`${dayNames[field.day]} opening time`}
+                      disabled={!isOpen}
+                      className={TIME_INPUT_CLASS}
+                    />
+                  )}
+                />
+
+                <span className="text-xs text-soft">to</span>
+
+                <Controller
+                  name={`hours.${index}.closeTime`}
+                  control={form.control}
+                  render={({ field: f }) => (
+                    <Input
+                      {...f}
+                      type="time"
+                      aria-label={`${dayNames[field.day]} closing time`}
+                      disabled={!isOpen}
+                      className={TIME_INPUT_CLASS}
+                    />
+                  )}
+                />
+              </div>
             </div>
           );
         })}
-      </div>
+      </SettingsSection>
 
-      <div className="mt-6">
-        <Button
-          type="submit"
-          className="bg-[#f97316] hover:bg-[#ea6c0a] text-white w-full"
-        >
-          {
-            form.formState.isSubmitting && <Spinner/>
-          }
-          {
-            form.formState.isSubmitting ? "Saving..." : "Save Hours"
-          }
-        </Button>
-      </div>
+      <SettingsSubmitButton
+        label="Save operating hours"
+        isSubmitting={form.formState.isSubmitting}
+      />
     </form>
   );
 }

@@ -11,6 +11,10 @@ interface ImageUploadFieldProps {
   maxImages?: number;
   multiple?: boolean; // false = single image only
   aspect?: "square" | "video"; // defaults to "square"
+  /** Names what this uploader is for. Falls back to a generic "Image"/"Images". */
+  label?: string;
+  /** Helper line under the label — sizing guidance, where it gets used, etc. */
+  hint?: string;
 }
 
 export function ImageUploadField({
@@ -19,6 +23,8 @@ export function ImageUploadField({
   maxImages = 4,
   multiple = true,
   aspect = "square",
+  label,
+  hint,
 }: ImageUploadFieldProps) {
   const effectiveMax = multiple ? maxImages : 1;
   const aspectClass = aspect === "video" ? "aspect-video" : "aspect-square";
@@ -29,14 +35,18 @@ export function ImageUploadField({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium text-[#374151]">
-        {multiple ? "Images" : "Image"}
-        {multiple && (
-          <span className="text-xs text-[#9ca3af] font-normal ml-1">
-            (up to {effectiveMax}, first is main)
-          </span>
-        )}
-      </p>
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-title">
+          {label ?? (multiple ? "Images" : "Image")}
+          {/* Only the unlabelled (generic) form inlines the count. */}
+          {!label && multiple && (
+            <span className="text-xs text-soft font-normal ml-1">
+              (up to {effectiveMax}, first is main)
+            </span>
+          )}
+        </p>
+        {hint && <p className="text-xs text-soft leading-relaxed">{hint}</p>}
+      </div>
 
       {value.length > 0 && (
         <div

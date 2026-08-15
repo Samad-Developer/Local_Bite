@@ -3,7 +3,7 @@
 import { useId, useMemo, useState } from "react"
 import { LineChart } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { CardHeading, DashCard, EmptyState } from "./ui"
+import { CardHeading, DashCard, EmptyState, SERIES, STATUS } from "./ui"
 import {
   formatCompactCurrency,
   formatCurrency,
@@ -107,10 +107,12 @@ export default function RevenueChart({
           {/* ── Summary row ── */}
           <div className="flex items-end justify-between gap-4 mb-5">
             <div>
-              <p className="text-2xl font-semibold text-title tracking-tight tabular-nums">
+              {/* Proportional figures — tabular-nums makes a display-size
+                  number look loose. */}
+              <p className="text-[30px] font-semibold text-title tracking-tight leading-none">
                 {metric === "revenue" ? formatCurrency(total) : formatNumber(total)}
               </p>
-              <p className="text-xs text-soft mt-1.5">
+              <p className="text-xs text-soft mt-2">
                 peak{" "}
                 {metric === "revenue"
                   ? formatCompactCurrency(max)
@@ -119,14 +121,15 @@ export default function RevenueChart({
                   <>
                     {" · "}
                     <span
-                      className={cn(
-                        "font-medium",
-                        totalDelta === null
-                          ? "text-soft"
-                          : totalDelta >= 0
-                            ? "text-[#16a34a]"
-                            : "text-[#dc2626]",
-                      )}
+                      className="font-medium"
+                      style={{
+                        color:
+                          totalDelta === null
+                            ? undefined
+                            : totalDelta >= 0
+                              ? STATUS.good
+                              : STATUS.bad,
+                      }}
                     >
                       {formatDelta(totalDelta)}
                     </span>{" "}
@@ -200,12 +203,18 @@ export default function RevenueChart({
               >
                 <defs>
                   <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f97316" stopOpacity="0.16" />
-                    <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+                    <stop offset="0%" stopColor={SERIES} stopOpacity="0.28" />
+                    <stop offset="55%" stopColor={SERIES} stopOpacity="0.09" />
+                    <stop offset="100%" stopColor={SERIES} stopOpacity="0" />
                   </linearGradient>
                 </defs>
 
-                <path d={areaPath} fill={`url(#${gradientId})`} />
+                <path
+                  d={areaPath}
+                  fill={`url(#${gradientId})`}
+                  className="animate-fade-rise"
+                  style={{ animationDelay: "260ms" }}
+                />
 
                 {/* Previous period sits behind, dashed and neutral, so it
                     reads as a reference rather than a second headline. */}
@@ -219,17 +228,25 @@ export default function RevenueChart({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     vectorEffect="non-scaling-stroke"
+                    opacity={0.75}
                   />
                 )}
 
+                {/* pathLength normalises the dash maths to 0–1, so the
+                    draw-in works despite the non-uniform viewBox scaling. */}
                 <path
+                  key={`${metric}-${data.length}`}
                   d={linePath}
                   fill="none"
-                  stroke="#f97316"
-                  strokeWidth={1.75}
+                  stroke={SERIES}
+                  strokeWidth={2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   vectorEffect="non-scaling-stroke"
+                  pathLength={1}
+                  strokeDasharray={1}
+                  className="animate-draw-line"
+                  style={{ ["--draw-length" as string]: 1 }}
                 />
               </svg>
 
@@ -353,14 +370,11 @@ function TooltipRow({
 function Delta({ change }: { change: number | null }) {
   return (
     <span
-      className={cn(
-        "font-medium tabular-nums",
-        change === null
-          ? "text-soft"
-          : change >= 0
-            ? "text-[#16a34a]"
-            : "text-[#dc2626]",
-      )}
+      className={cn("font-medium tabular-nums", change === null && "text-soft")}
+      style={{
+        color:
+          change === null ? undefined : change >= 0 ? STATUS.good : STATUS.bad,
+      }}
     >
       {formatDelta(change)}
     </span>

@@ -43,15 +43,23 @@ export function percentChange(current: number, previous: number): number | null 
   return ((current - previous) / previous) * 100
 }
 
-/** Minutes → "1h 24m" / "18m" / "45s" */
+/** Minutes → "3d 4h" / "1h 24m" / "18m" / "45s" */
 export function formatDuration(minutes: number) {
   if (!Number.isFinite(minutes) || minutes < 0) return "—"
   if (minutes < 1) return `${Math.round(minutes * 60)}s`
   if (minutes < 60) return `${Math.round(minutes)}m`
 
-  const h = Math.floor(minutes / 60)
-  const m = Math.round(minutes % 60)
-  return m ? `${h}h ${m}m` : `${h}h`
+  if (minutes < 1440) {
+    const h = Math.floor(minutes / 60)
+    const m = Math.round(minutes % 60)
+    // 90m rounds to "1h 30m"; 119.6m must not become "1h 60m".
+    return m === 60 ? `${h + 1}h` : m ? `${h}h ${m}m` : `${h}h`
+  }
+
+  // A forgotten kitchen ticket can be days old — "480h 59m" is unreadable.
+  const d = Math.floor(minutes / 1440)
+  const h = Math.round((minutes % 1440) / 60)
+  return h === 24 ? `${d + 1}d` : h ? `${d}d ${h}h` : `${d}d`
 }
 
 /** Elapsed time since a timestamp — "4m ago", "2h ago" */

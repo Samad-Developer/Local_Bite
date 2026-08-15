@@ -9,6 +9,7 @@ import {
   EmptyState,
   TYPE_COLORS,
   TYPE_LABELS,
+  slotColor,
 } from "./ui"
 import {
   formatCompactCurrency,
@@ -183,12 +184,19 @@ export default function ChannelTrend({
               className="absolute inset-0 w-full h-full"
               aria-hidden="true"
             >
-              {bands.map(({ key, lower, upper }) => (
+              {bands.map(({ key, lower, upper }, i) => (
                 <path
                   key={key}
                   d={bandPath(lower, upper, toX, toY)}
-                  fill={TYPE_COLORS[key] ?? "#9ca3af"}
-                  fillOpacity={0.85}
+                  fill={TYPE_COLORS[key] ?? slotColor(i)}
+                  fillOpacity={0.9}
+                  // A 2px surface stroke is the gap that separates touching
+                  // bands — white doing the work, not a darker outline.
+                  stroke="#ffffff"
+                  strokeWidth={2}
+                  vectorEffect="non-scaling-stroke"
+                  className="animate-fade-rise"
+                  style={{ animationDelay: `${i * 90}ms` }}
                 />
               ))}
             </svg>

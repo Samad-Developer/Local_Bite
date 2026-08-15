@@ -199,3 +199,110 @@
 .animate-bounce-in {
   animation: bounce-in 0.35s ease-out;
 }
+
+/* ─── Dashboard chart entrances ───────────────────────
+   Each mark grows from its own baseline, so the chart assembles the way
+   the data reads: bars from the left, columns from the floor, lines drawn
+   head to tail. Every one of these is switched off under
+   prefers-reduced-motion at the bottom of this block. */
+
+@keyframes grow-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes grow-column {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: var(--draw-length);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-grow-bar {
+  animation: grow-bar 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-grow-column {
+  animation: grow-column 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Pair with style={{ "--draw-length": <path length> }} and a matching
+   stroke-dasharray, or the line will simply appear. */
+.animate-draw-line {
+  stroke-dashoffset: var(--draw-length);
+  animation: draw-line 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-fade-rise {
+  animation: fade-rise 0.5s ease-out both;
+}
+
+/* Donut segments sweep out from zero length, staggered by --arc-delay.
+   The element already carries its full stroke-dasharray, so if this
+   animation never runs the ring is simply drawn complete. */
+@keyframes donut-sweep {
+  from {
+    stroke-dasharray: 0 var(--arc-gap);
+  }
+  to {
+    stroke-dasharray: var(--arc-len) var(--arc-gap);
+  }
+}
+
+.donut-arc {
+  animation: donut-sweep 0.7s cubic-bezier(0.22, 1, 0.36, 1)
+    var(--arc-delay, 0ms) both;
+  transition:
+    stroke-width 0.2s ease-out,
+    opacity 0.2s ease-out;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-grow-bar,
+  .animate-grow-column,
+  .animate-draw-line,
+  .animate-fade-rise,
+  .animate-bounce-in {
+    animation: none;
+  }
+
+  /* The line is dash-offset by default, so cancelling the animation alone
+     would leave it invisible. */
+  .animate-draw-line {
+    stroke-dashoffset: 0;
+  }
+
+  /* Arcs still reach full length — they just snap there, because the
+     full stroke-dasharray is on the element itself. */
+  .donut-arc {
+    animation: none;
+    transition: none;
+  }
+}

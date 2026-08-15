@@ -1,148 +1,294 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { updateOrderStatus } from "@/lib/actions/orders/orders"
-import { ArrowLeft, Phone, MapPin, Clock, UtensilsCrossed } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { toast } from "sonner"
+import {
+  ArrowLeft,
+  Bike,
+  Check,
+  ChefHat,
+  Clock,
+  Flame,
+  Hash,
+  Leaf,
+  MapPin,
+  Phone,
+  Receipt,
+  ShoppingBag,
+  Timer,
+  UtensilsCrossed,
+  Wallet,
+  X,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { updateOrderStatus } from "@/lib/actions/orders/orders"
+import type { OrderDetail } from "@/lib/actions/orders/orders"
+import type { OrderStatus } from "@prisma/client"
 
 // ── Status flow ────────────────────────────────────
+// The happy path an order walks. `PIPELINE` drives the stepper, so adding a
+// stage here adds it to the timeline too — the two can't drift apart.
 
-const statusFlow: Record<string, { next: string; label: string; color: string } | null> = {
-  NEW:       { next: "CONFIRMED", label: "Confirm Order",   color: "bg-[#7c3aed] hover:bg-[#6d28d9]" },
-  CONFIRMED: { next: "PREPARING", label: "Start Preparing", color: "bg-[#ca8a04] hover:bg-[#a16207]" },
-  PREPARING: { next: "READY",     label: "Mark as Ready",   color: "bg-[#f97316] hover:bg-[#ea6c0a]" },
-  READY:     { next: "COMPLETED", label: "Complete Order",  color: "bg-[#16a34a] hover:bg-[#15803d]" },
+const PIPELINE = [
+  { status: "NEW", label: "Placed", icon: ShoppingBag },
+  { status: "CONFIRMED", label: "Confirmed", icon: Check },
+  { status: "PREPARING", label: "Preparing", icon: ChefHat },
+  { status: "READY", label: "Ready", icon: UtensilsCrossed },
+  { status: "COMPLETED", label: "Completed", icon: Check },
+] as const
+
+const NEXT_ACTION: Record<string, { next: OrderStatus; label: string } | null> = {
+  NEW: { next: "CONFIRMED", label: "Confirm order" },
+  CONFIRMED: { next: "PREPARING", label: "Start preparing" },
+  PREPARING: { next: "READY", label: "Mark as ready" },
+  READY: { next: "COMPLETED", label: "Complete order" },
   COMPLETED: null,
   CANCELLED: null,
 }
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  NEW:       { label: "New",       color: "bg-[#eff6ff] text-[#2563eb] border-[#bfdbfe]" },
-  CONFIRMED: { label: "Confirmed", color: "bg-[#f5f3ff] text-[#7c3aed] border-[#ddd6fe]" },
-  PREPARING: { label: "Preparing", color: "bg-[#fefce8] text-[#ca8a04] border-[#fde68a]" },
-  READY:     { label: "Ready",     color: "bg-[#fff7ed] text-[#f97316] border-[#fed7aa]" },
-  COMPLETED: { label: "Completed", color: "bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]" },
-  CANCELLED: { label: "Cancelled", color: "bg-[#fef2f2] text-[#dc2626] border-[#fecaca]" },
+const STATUS_CHIP: Record<string, string> = {
+  NEW: "bg-[#eff6ff] text-[#2563eb] border-[#bfdbfe]",
+  CONFIRMED: "bg-[#f5f3ff] text-[#7c3aed] border-[#ddd6fe]",
+  PREPARING: "bg-[#fefce8] text-[#ca8a04] border-[#fde68a]",
+  READY: "bg-[#fff7ed] text-[#f97316] border-[#fed7aa]",
+  COMPLETED: "bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]",
+  CANCELLED: "bg-[#fef2f2] text-[#dc2626] border-[#fecaca]",
 }
 
-export default function OrderDetailClient({ order }: { order: any }) {
-  const router = useRouter()
-  const [currentStatus, setCurrentStatus] = useState(order.status)
-  const [isPending, startTransition] = useTransition()
+const STATUS_LABEL: Record<string, string> = {
+  NEW: "New",
+  CONFIRMED: "Confirmed",
+  PREPARING: "Preparing",
+  READY: "Ready",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
+}
 
-  const nextAction = statusFlow[currentStatus]
+const TYPE_META: Record<string, { label: string; icon: typeof Bike }> = {
+  DINE_IN: { label: "Dine in", icon: UtensilsCrossed },
+  TAKEAWAY: { label: "Takeaway", icon: ShoppingBag },
+  DELIVERY: { label: "Delivery", icon: Bike },
+}
 
-  function handleStatusUpdate() {
-    if (!nextAction) return
-    startTransition(async () => {
-      const result = await updateOrderStatus(order.id, nextAction.next as any)
+// NONE is intentionally absent — it renders no chip at all.
+const SPICY_LABEL: Record<string, string> = {
+  MILD: "Mild",
+  MEDIUM: "Medium",
+  HOT: "Hot",
+}
+
+const CARD =
+  "bg-surface border border-border rounded-xl shadow-[0_1px_2px_rgba(17,17,17,0.04),0_8px_24px_-12px_rgba(17,17,17,0.10)]"
+
+export default function OrderDetailClient({ order }: { order: OrderDetail }) {
+  // Optimistic override, derived during render rather than mirrored into
+  // state: once the server catches up, `base` no longer matches and we fall
+  // straight back to server truth. A copy in state would go stale whenever
+  // the order changed from another screen.
+  const [optimistic, setOptimistic] = useState<{
+    base: string
+    value: string
+  } | null>(null)
+
+  const currentStatus =
+    optimistic && optimistic.base === order.status ? optimistic.value : order.status
+
+  // Deliberately NOT useTransition's isPending. The server action calls
+  // revalidatePath on this very route, so the transition stays pending
+  // through a full RSC refetch — which is why the button used to sit on
+  // "Updating…" long after the status had actually changed. This clears the
+  // moment the action itself resolves.
+  const [submitting, setSubmitting] = useState<"advance" | "cancel" | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
+  const nextAction = NEXT_ACTION[currentStatus]
+  const cancelled = currentStatus === "CANCELLED"
+  const settled = cancelled || currentStatus === "COMPLETED"
+
+  const type = TYPE_META[order.type] ?? TYPE_META.DINE_IN
+  const TypeIcon = type.icon
+  const paid = order.paymentStatus === "PAID"
+
+  const totalUnits = order.items.reduce((n, i) => n + i.quantity, 0)
+  const longestPrep = order.items.reduce(
+    (max, i) => Math.max(max, i.menuItem.preparationTime ?? 0),
+    0,
+  )
+
+  async function run(
+    kind: "advance" | "cancel",
+    next: OrderStatus,
+    successMessage?: string,
+  ) {
+    if (submitting) return
+    setSubmitting(kind)
+    try {
+      const result = await updateOrderStatus(order.id, next)
       if (result?.success) {
-        setCurrentStatus(nextAction.next)
-        toast.success(result.message)
+        setOptimistic({ base: order.status, value: next })
+        setConfirmOpen(false)
+        toast.success(successMessage ?? result.message)
       } else {
-        toast.error("Failed to update status")
+        toast.error(result?.error ?? "Failed to update status")
       }
-    })
-  }
-
-  function handleCancel() {
-    startTransition(async () => {
-      const result = await updateOrderStatus(order.id, "CANCELLED" as any)
-      if (result?.success) {
-        setCurrentStatus("CANCELLED")
-        toast.success("Order cancelled")
-      }
-    })
+    } catch {
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setSubmitting(null)
+    }
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="w-full space-y-5 pb-10">
+      {/* ── Header ── */}
+      <div className={cn(CARD, "px-5 py-4 lg:px-6 lg:py-5")}>
+        <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <Link href={{ pathname: "/orders" }} aria-label="Back to orders">
+              <Button variant="ghost" size="icon" className="w-9 h-9 mt-0.5 shrink-0">
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            </Link>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href={{ pathname: "/orders" }}>
-            <Button variant="ghost" size="icon" className="w-8 h-8">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-semibold text-[#111111]">
-              Order #{order.orderNumber}
-            </h1>
-            <p className="text-sm text-[#6b7280] mt-0.5">
-              {new Date(order.createdAt).toLocaleString()}
-            </p>
-          </div>
-        </div>
-
-        {/* Status badge */}
-        <span className={`
-          text-sm font-medium px-3 py-1.5 rounded-full border
-          ${statusConfig[currentStatus]?.color}
-        `}>
-          {statusConfig[currentStatus]?.label}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-
-        {/* Left — Order details */}
-        <div className="col-span-2 space-y-4">
-
-          {/* Customer info */}
-          <div className="bg-white border border-[#e5e7eb] rounded-xl p-4">
-            <h2 className="text-sm font-semibold text-[#111111] mb-3">
-              Customer Information
-            </h2>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-[#6b7280]">
-                <span className="font-medium text-[#111111]">
-                  {order.customerName}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-[26px] font-semibold text-title tracking-tight leading-none">
+                  Order #{order.orderNumber}
+                </h1>
+                <span
+                  className={cn(
+                    "text-xs font-medium px-2.5 py-1 rounded-full border",
+                    STATUS_CHIP[currentStatus],
+                  )}
+                >
+                  {STATUS_LABEL[currentStatus]}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-[#6b7280]">
-                <Phone className="w-3.5 h-3.5" />
-                {order.customerPhone}
-              </div>
-              {order.customerAddress && (
-                <div className="flex items-center gap-2 text-sm text-[#6b7280]">
-                  <MapPin className="w-3.5 h-3.5" />
-                  {order.customerAddress}
-                </div>
-              )}
-              <div className="flex items-center gap-2 text-sm text-[#6b7280]">
-                <UtensilsCrossed className="w-3.5 h-3.5" />
-                {order.type === "DINE_IN" ? "Dine In"
-                  : order.type === "TAKEAWAY" ? "Takeaway"
-                  : "Delivery"}
+
+              <div className="flex items-center gap-3 flex-wrap mt-2.5 text-xs text-soft">
+                <span className="inline-flex items-center gap-1.5">
+                  <TypeIcon className="w-3.5 h-3.5" />
+                  {type.label}
+                </span>
+                <span>{formatFull(order.createdAt)}</span>
+                <RelativeTime date={order.createdAt} />
               </div>
             </div>
           </div>
 
-          {/* Order items */}
-          <div className="bg-white border border-[#e5e7eb] rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-[#f3f4f6]">
-              <h2 className="text-sm font-semibold text-[#111111]">
-                Order Items
-              </h2>
-            </div>
-            <div className="divide-y divide-[#f3f4f6]">
-              {order.items.map((item: any) => (
-                <div key={item.id} className="px-4 py-3 flex items-start gap-3">
+          <div className="text-right shrink-0">
+            <p className="text-[26px] font-semibold text-title tracking-tight leading-none">
+              {money(order.total)}
+            </p>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 text-xs font-medium mt-2",
+                paid ? "text-[#16a34a]" : "text-[#ca8a04]",
+              )}
+            >
+              <Wallet className="w-3.5 h-3.5" />
+              {paid ? "Paid" : "Payment pending"} · {titleCase(order.paymentMethod)}
+            </span>
+          </div>
+        </div>
+      </div>
 
-                  {/* Item image */}
-                  <div className="w-10 h-10 rounded-lg overflow-hidden border border-[#e5e7eb] bg-[#f9fafb] flex-shrink-0">
-                    {item.menuItem.images?.[0]?.url ? (
+      {/* ── Progress ── */}
+      <Progress status={currentStatus} />
+
+      {/* ── Facts strip ── */}
+      {/* Wraps from 2 up to 6 across, so the row stays full on any width
+          instead of leaving a ragged gap on the right. The 1px gap over a
+          border-coloured background draws the grid lines, which `divide-x`
+          cannot do once the cells wrap onto a second row. */}
+      <div
+        className={cn(
+          CARD,
+          "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-px bg-border overflow-hidden",
+        )}
+      >
+        <Fact icon={TypeIcon} label="Order type" value={type.label} />
+        <Fact
+          icon={Hash}
+          label="Items"
+          value={`${totalUnits}`}
+          hint={`${order.items.length} line${order.items.length === 1 ? "" : "s"}`}
+        />
+        <Fact
+          icon={Wallet}
+          label="Payment"
+          value={titleCase(order.paymentMethod)}
+          hint={paid ? "Paid" : "Pending"}
+          tone={paid ? "good" : "warn"}
+        />
+        {/* Always rendered: six cells divide evenly into the 2/3/6-column
+            layouts, so omitting one would leave an empty grid track showing
+            the border colour as a grey block. */}
+        <Fact
+          icon={Timer}
+          label="Longest prep"
+          value={longestPrep > 0 ? `${longestPrep} min` : "—"}
+          hint="Slowest item"
+        />
+        <Fact
+          icon={Clock}
+          label="Placed"
+          value={formatTime(order.createdAt)}
+          hint={formatDay(order.createdAt)}
+        />
+        <Fact
+          icon={Receipt}
+          label="Last updated"
+          value={formatTime(order.updatedAt)}
+          hint={formatDay(order.updatedAt)}
+        />
+      </div>
+
+      {/* ── Body ── */}
+      {/* items-start stops the shorter column being stretched to the taller
+          one, which is what left a tall empty gap inside the items card on
+          small orders. */}
+      <div className="grid gap-5 xl:grid-cols-12 items-start">
+        {/* Items */}
+        <div className="xl:col-span-8 space-y-5">
+        <section className={CARD}>
+          <header className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-border">
+            <h2 className="text-sm font-semibold text-title">Items</h2>
+            <span className="text-xs text-soft tabular-nums">
+              {order.items.length} line{order.items.length === 1 ? "" : "s"} ·{" "}
+              {totalUnits} item{totalUnits === 1 ? "" : "s"}
+            </span>
+          </header>
+
+          <ul className="divide-y divide-border">
+            {order.items.map((item) => {
+              const menuItem = item.menuItem
+              const spicy = SPICY_LABEL[menuItem.spicyLevel]
+
+              return (
+                <li
+                  key={item.id}
+                  className="flex items-start gap-4 px-5 py-4 hover:bg-elevated/60 transition-colors duration-150"
+                >
+                  <div className="w-14 h-14 rounded-lg overflow-hidden border border-border bg-elevated shrink-0">
+                    {menuItem.images?.[0]?.url ? (
                       <Image
-                        src={item.menuItem.images[0].url}
-                        alt={item.menuItem.name}
-                        width={40}
-                        height={40}
+                        src={menuItem.images[0].url}
+                        alt=""
+                        width={56}
+                        height={56}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -152,150 +298,568 @@ export default function OrderDetailClient({ order }: { order: any }) {
                     )}
                   </div>
 
-                  {/* Item details */}
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-[#111111]">
-                        {item.menuItem.name}
-                        <span className="text-[#9ca3af] ml-1">×{item.quantity}</span>
-                      </p>
-                      <p className="text-sm font-semibold text-[#111111]">
-                        Rs. {item.totalPrice.toLocaleString()}
-                      </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-title">
+                          {menuItem.name}
+                        </p>
+
+                        <div className="flex items-center gap-2 flex-wrap mt-1 text-xs text-soft">
+                          {menuItem.category?.name && (
+                            <span>{menuItem.category.name}</span>
+                          )}
+                          {menuItem.foodType === "VEG" && (
+                            <span className="inline-flex items-center gap-1 text-[#16a34a]">
+                              <Leaf className="w-3 h-3" />
+                              Veg
+                            </span>
+                          )}
+                          {spicy && (
+                            <span className="inline-flex items-center gap-1 text-[#dc2626]">
+                              <Flame className="w-3 h-3" />
+                              {spicy}
+                            </span>
+                          )}
+                          {menuItem.preparationTime > 0 && (
+                            <span className="inline-flex items-center gap-1">
+                              <Timer className="w-3 h-3" />
+                              {menuItem.preparationTime} min
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-semibold text-title tabular-nums">
+                          {money(item.totalPrice)}
+                        </p>
+                        <p className="text-xs text-soft tabular-nums mt-1">
+                          {item.quantity} × {money(item.unitPrice)}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Variant */}
-                    {item.variant && (
-                      <p className="text-xs text-[#6b7280] mt-0.5">
-                        {item.variant.name} — Rs. {item.variant.price}
+                    {menuItem.description && (
+                      <p className="text-xs text-soft mt-2 leading-relaxed line-clamp-2">
+                        {menuItem.description}
                       </p>
                     )}
 
-                    {/* Addons */}
-                    {item.addons.length > 0 && (
-                      <div className="mt-1 space-y-0.5">
-                        {item.addons.map((addon: any) => (
-                          <p key={addon.id} className="text-xs text-[#9ca3af]">
+                    {(item.variant || item.addons.length > 0) && (
+                      <div className="flex flex-wrap gap-1.5 mt-2.5">
+                        {item.variant && (
+                          <Tag>
+                            {item.variant.name}
+                            {item.variant.price > 0 &&
+                              ` · ${money(item.variant.price)}`}
+                          </Tag>
+                        )}
+                        {item.addons.map((addon) => (
+                          <Tag key={addon.id}>
                             + {addon.name}
-                            {addon.price > 0 && ` (Rs. ${addon.price})`}
-                          </p>
+                            {addon.price > 0 && ` · ${money(addon.price)}`}
+                          </Tag>
                         ))}
                       </div>
                     )}
-
-                    {/* Special instructions */}
-                    {item.specialInstructions && (
-                      <p className="text-xs text-[#f97316] mt-1 bg-[#fff7ed] px-2 py-1 rounded">
-                        Note: {item.specialInstructions}
-                      </p>
-                    )}
                   </div>
-                </div>
-              ))}
-            </div>
+                </li>
+              )
+            })}
+          </ul>
+
+        </section>
+
+          {/* Under the items: the two things that always have content, so
+              the column keeps its weight even on a three-line order. */}
+          <div className="grid gap-5 md:grid-cols-2">
+            <Timeline order={order} status={currentStatus} />
+
+            <section
+              className={cn(
+                order.specialNotes
+                  ? "bg-[#fff7ed] border border-[#fed7aa] rounded-xl"
+                  : CARD,
+              )}
+            >
+              <header
+                className={cn(
+                  "px-5 py-3.5 border-b",
+                  order.specialNotes ? "border-[#fed7aa]" : "border-border",
+                )}
+              >
+                <h2
+                  className={cn(
+                    "text-sm font-semibold",
+                    order.specialNotes ? "text-[#c2410c]" : "text-title",
+                  )}
+                >
+                  Note for the kitchen
+                </h2>
+              </header>
+              <div className="px-5 py-4">
+                {order.specialNotes ? (
+                  <p className="text-sm text-title leading-relaxed">
+                    {order.specialNotes}
+                  </p>
+                ) : (
+                  <p className="text-sm text-soft">
+                    No special instructions on this order.
+                  </p>
+                )}
+              </div>
+            </section>
           </div>
-
-          {/* Special notes */}
-          {order.specialNotes && (
-            <div className="bg-[#fff7ed] border border-[#fed7aa] rounded-xl p-4">
-              <p className="text-sm font-medium text-[#f97316] mb-1">
-                Special Notes
-              </p>
-              <p className="text-sm text-[#111111]">{order.specialNotes}</p>
-            </div>
-          )}
-
         </div>
 
-        {/* Right — Summary and actions */}
-        <div className="space-y-4">
-
-          {/* Order summary */}
-          <div className="bg-white border border-[#e5e7eb] rounded-xl p-4">
-            <h2 className="text-sm font-semibold text-[#111111] mb-3">
-              Order Summary
-            </h2>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm text-[#6b7280]">
-                <span>Subtotal</span>
-                <span>Rs. {order.subtotal.toLocaleString()}</span>
+        {/* Right rail — sticks alongside a long item list. */}
+        <div className="xl:col-span-4 space-y-5 xl:sticky xl:top-6">
+          {/* Actions first: this is what the page is opened to do. */}
+          <section className={cn(CARD, "p-5 space-y-3")}>
+            {nextAction ? (
+              <>
+                <Button
+                  onClick={() => run("advance", nextAction.next)}
+                  disabled={submitting !== null}
+                  className="w-full h-11 bg-brand hover:bg-brand-hover text-white font-medium"
+                >
+                  {submitting === "advance" ? "Updating…" : nextAction.label}
+                </Button>
+                <p className="text-xs text-soft text-center">
+                  Moves this order to{" "}
+                  {STATUS_LABEL[nextAction.next].toLowerCase()}
+                </p>
+              </>
+            ) : (
+              <div
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-3.5 py-3",
+                  cancelled
+                    ? "bg-[#fef2f2] text-[#dc2626]"
+                    : "bg-[#f0fdf4] text-[#16a34a]",
+                )}
+              >
+                {cancelled ? (
+                  <X className="w-4 h-4 shrink-0" />
+                ) : (
+                  <Check className="w-4 h-4 shrink-0" />
+                )}
+                <p className="text-sm font-medium">
+                  {cancelled ? "Order cancelled" : "Order completed"}
+                </p>
               </div>
-              {order.deliveryFee > 0 && (
-                <div className="flex justify-between text-sm text-[#6b7280]">
-                  <span>Delivery Fee</span>
-                  <span>Rs. {order.deliveryFee.toLocaleString()}</span>
+            )}
+
+            {!settled && (
+              <Button
+                onClick={() => setConfirmOpen(true)}
+                disabled={submitting !== null}
+                variant="outline"
+                className="w-full border-border text-[#dc2626] hover:bg-[#fef2f2] hover:text-[#dc2626]"
+              >
+                Cancel order
+              </Button>
+            )}
+          </section>
+
+          {/* Customer */}
+          <section className={CARD}>
+            <header className="px-5 py-3.5 border-b border-border">
+              <h2 className="text-sm font-semibold text-title">Customer</h2>
+            </header>
+
+            <div className="px-5 py-4 space-y-3.5">
+              <p className="text-sm font-medium text-title">
+                {order.customerName}
+              </p>
+
+              <a
+                href={`tel:${order.customerPhone}`}
+                className="flex items-center gap-2.5 text-sm text-label hover:text-brand transition-colors duration-150"
+              >
+                <Phone className="w-3.5 h-3.5 shrink-0" />
+                <span className="tabular-nums">{order.customerPhone}</span>
+              </a>
+
+              {order.customerAddress && (
+                <div className="flex items-start gap-2.5 text-sm text-label">
+                  <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">
+                    {order.customerAddress}
+                  </span>
                 </div>
+              )}
+
+              {order.deliveryArea && (
+                <div className="flex items-center justify-between gap-3 pt-3.5 border-t border-border">
+                  <span className="text-xs text-soft">Delivery zone</span>
+                  <span className="text-sm text-title">
+                    {order.deliveryArea.name}
+                  </span>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Bill */}
+          <section className={CARD}>
+            <header className="px-5 py-3.5 border-b border-border">
+              <h2 className="text-sm font-semibold text-title">Bill</h2>
+            </header>
+
+            <dl className="px-5 py-4 space-y-2.5">
+              <Row
+                label={`Subtotal (${totalUnits} item${totalUnits === 1 ? "" : "s"})`}
+                value={money(order.subtotal)}
+              />
+              {order.deliveryFee > 0 && (
+                <Row label="Delivery fee" value={money(order.deliveryFee)} />
               )}
               {order.discount > 0 && (
-                <div className="flex justify-between text-sm text-[#16a34a]">
-                  <span>Discount</span>
-                  <span>- Rs. {order.discount.toLocaleString()}</span>
+                <Row
+                  label="Discount"
+                  value={`− ${money(order.discount)}`}
+                  tone="text-[#16a34a]"
+                />
+              )}
+
+              <div className="flex items-baseline justify-between pt-3 mt-1 border-t border-border">
+                <dt className="text-sm font-semibold text-title">Total</dt>
+                <dd className="text-lg font-semibold text-title tabular-nums">
+                  {money(order.total)}
+                </dd>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-border">
+                <dt className="text-sm text-label">Payment</dt>
+                <dd
+                  className={cn(
+                    "text-sm font-medium",
+                    paid ? "text-[#16a34a]" : "text-[#ca8a04]",
+                  )}
+                >
+                  {titleCase(order.paymentMethod)} · {paid ? "Paid" : "Pending"}
+                </dd>
+              </div>
+
+              {order.items.length > 0 && (
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <dt className="text-sm text-label">Average per item</dt>
+                  <dd className="text-sm text-title tabular-nums">
+                    {money(order.subtotal / Math.max(1, totalUnits))}
+                  </dd>
                 </div>
               )}
-              <div className="border-t border-[#f3f4f6] pt-2 flex justify-between text-sm font-semibold text-[#111111]">
-                <span>Total</span>
-                <span>Rs. {order.total.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div className="mt-3 pt-3 border-t border-[#f3f4f6]">
-              <div className="flex justify-between text-sm">
-                <span className="text-[#6b7280]">Payment</span>
-                <span className={`font-medium ${
-                  order.paymentStatus === "PAID"
-                    ? "text-[#16a34a]"
-                    : "text-[#ca8a04]"
-                }`}>
-                  {order.paymentMethod} — {order.paymentStatus}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Status actions */}
-          <div className="bg-white border border-[#e5e7eb] rounded-xl p-4 space-y-2">
-            <h2 className="text-sm font-semibold text-[#111111] mb-3">
-              Actions
-            </h2>
-
-            {/* Next status button */}
-            {nextAction && (
-              <Button
-                onClick={handleStatusUpdate}
-                disabled={isPending}
-                className={`w-full text-white ${nextAction.color}`}
-              >
-                {isPending ? "Updating..." : nextAction.label}
-              </Button>
-            )}
-
-            {/* Cancel button */}
-            {currentStatus !== "COMPLETED" && currentStatus !== "CANCELLED" && (
-              <Button
-                onClick={handleCancel}
-                disabled={isPending}
-                variant="outline"
-                className="w-full border-[#fecaca] text-[#dc2626] hover:bg-[#fef2f2]"
-              >
-                Cancel Order
-              </Button>
-            )}
-
-            {currentStatus === "COMPLETED" && (
-              <p className="text-center text-sm text-[#16a34a] font-medium">
-                ✓ Order completed
-              </p>
-            )}
-
-            {currentStatus === "CANCELLED" && (
-              <p className="text-center text-sm text-[#dc2626] font-medium">
-                ✗ Order cancelled
-              </p>
-            )}
-          </div>
-
+            </dl>
+          </section>
         </div>
       </div>
+
+      {/* Cancelling can't be undone from this screen, so it asks first. */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Cancel order #{order.orderNumber}?</DialogTitle>
+            <DialogDescription>
+              This marks the order cancelled for {order.customerName} and
+              removes {money(order.total)} from your sales. It can&apos;t be
+              undone here.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" disabled={submitting !== null}>
+                Keep order
+              </Button>
+            </DialogClose>
+            <Button
+              onClick={() => run("cancel", "CANCELLED", "Order cancelled")}
+              disabled={submitting !== null}
+              className="bg-[#dc2626] hover:bg-[#b91c1c] text-white"
+            >
+              {submitting === "cancel" ? "Cancelling…" : "Cancel order"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
+}
+
+// ─── Progress stepper ─────────────────────────────────
+
+function Progress({ status }: { status: string }) {
+  if (status === "CANCELLED") {
+    return (
+      <div className="flex items-center gap-2.5 bg-[#fef2f2] border border-[#fecaca] rounded-xl px-5 py-3.5">
+        <X className="w-4 h-4 text-[#dc2626] shrink-0" />
+        <p className="text-sm text-[#dc2626]">
+          This order was cancelled and is no longer in the kitchen queue.
+        </p>
+      </div>
+    )
+  }
+
+  const index = PIPELINE.findIndex((s) => s.status === status)
+
+  return (
+    <ol
+      className={cn(
+        CARD,
+        "flex items-center gap-1 px-5 py-4 lg:px-6 overflow-x-auto",
+      )}
+    >
+      {PIPELINE.map((stage, i) => {
+        const done = i < index
+        const current = i === index
+        const Icon = stage.icon
+
+        return [
+          <li
+            key={stage.status}
+            className="flex items-center gap-2.5 shrink-0"
+            aria-current={current ? "step" : undefined}
+          >
+            <span
+              className={cn(
+                "flex items-center justify-center w-8 h-8 rounded-full border transition-colors duration-300",
+                done && "bg-[#f0fdf4] border-[#bbf7d0] text-[#16a34a]",
+                current && "bg-brand border-brand text-white",
+                !done && !current && "bg-elevated border-border text-[#9ca3af]",
+              )}
+            >
+              <Icon className="w-3.5 h-3.5" />
+            </span>
+            <span
+              className={cn(
+                "text-xs whitespace-nowrap",
+                current ? "font-medium text-title" : "text-soft",
+              )}
+            >
+              {stage.label}
+            </span>
+          </li>,
+
+          // Connectors are their own equal-basis items rather than living
+          // inside a stage, so they all render the same length regardless of
+          // how long the stage labels are.
+          i < PIPELINE.length - 1 ? (
+            <li
+              key={`${stage.status}-line`}
+              aria-hidden="true"
+              className="flex-1 basis-0 min-w-5 h-px mx-2 bg-border relative overflow-hidden"
+            >
+              <span
+                className="absolute inset-y-0 left-0 bg-[#16a34a] transition-[width] duration-500"
+                style={{ width: done ? "100%" : "0%" }}
+              />
+            </li>
+          ) : null,
+        ]
+      })}
+    </ol>
+  )
+}
+
+// ─── Timeline ─────────────────────────────────────────
+// Only two timestamps exist on an order (createdAt / updatedAt), so this
+// reports exactly those rather than inventing a per-stage history.
+
+function Timeline({
+  order,
+  status,
+}: {
+  order: OrderDetail
+  status: string
+}) {
+  const stageIndex = PIPELINE.findIndex((s) => s.status === status)
+  const settled = status === "COMPLETED" || status === "CANCELLED"
+
+  return (
+    <section className={CARD}>
+      <header className="px-5 py-3.5 border-b border-border">
+        <h2 className="text-sm font-semibold text-title">Timeline</h2>
+      </header>
+
+      <div className="px-5 py-4 space-y-4">
+        <Moment
+          label="Order placed"
+          value={formatFull(order.createdAt)}
+          date={order.createdAt}
+        />
+        <Moment
+          label={settled ? "Closed" : "Last updated"}
+          value={formatFull(order.updatedAt)}
+          date={order.updatedAt}
+        />
+
+        <div className="flex items-center justify-between gap-3 pt-3.5 border-t border-border">
+          <span className="text-xs text-soft">Stage</span>
+          <span className="text-sm text-title">
+            {status === "CANCELLED"
+              ? "Cancelled"
+              : `${stageIndex + 1} of ${PIPELINE.length} · ${STATUS_LABEL[status]}`}
+          </span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Moment({
+  label,
+  value,
+  date,
+}: {
+  label: string
+  value: string
+  date: Date | string
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <span className="text-sm text-label">{label}</span>
+      <span className="text-right">
+        <span className="block text-sm text-title tabular-nums">{value}</span>
+        <span className="block text-xs text-soft mt-0.5">
+          <RelativeTime date={date} />
+        </span>
+      </span>
+    </div>
+  )
+}
+
+// ─── Small pieces ─────────────────────────────────────
+
+function Fact({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  tone = "plain",
+}: {
+  icon: typeof Bike
+  label: string
+  value: string
+  hint?: string
+  tone?: "plain" | "good" | "warn"
+}) {
+  const toneClass =
+    tone === "good"
+      ? "text-[#16a34a]"
+      : tone === "warn"
+        ? "text-[#ca8a04]"
+        : "text-soft"
+
+  return (
+    <div className="bg-surface px-5 py-4 min-w-0">
+      <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-soft">
+        <Icon className="w-3.5 h-3.5" />
+        {label}
+      </p>
+      <p className="text-base font-semibold text-title mt-2 leading-none truncate">
+        {value}
+      </p>
+      {hint && <p className={cn("text-xs mt-1.5 truncate", toneClass)}>{hint}</p>}
+    </div>
+  )
+}
+
+function Tag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center text-xs text-label bg-elevated border border-border rounded-md px-2 py-1">
+      {children}
+    </span>
+  )
+}
+
+function Row({
+  label,
+  value,
+  tone,
+}: {
+  label: string
+  value: string
+  tone?: string
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className="text-sm text-label">{label}</dt>
+      <dd className={cn("text-sm tabular-nums", tone ?? "text-title")}>
+        {value}
+      </dd>
+    </div>
+  )
+}
+
+/**
+ * Reading the clock during render is impure — it would differ between the
+ * server and client passes. So this renders nothing until mounted, then
+ * ticks every half minute, which is what a kitchen screen actually wants.
+ * It sits last in its row so appearing shifts nothing beside it.
+ */
+function RelativeTime({ date }: { date: Date | string }) {
+  const [now, setNow] = useState<number | null>(null)
+
+  useEffect(() => {
+    const tick = () => setNow(Date.now())
+    const raf = requestAnimationFrame(tick)
+    const id = setInterval(tick, 30_000)
+    return () => {
+      cancelAnimationFrame(raf)
+      clearInterval(id)
+    }
+  }, [])
+
+  if (now === null) return null
+
+  const minutes = Math.max(0, Math.floor((now - new Date(date).getTime()) / 60000))
+
+  const text =
+    minutes < 1
+      ? "just now"
+      : minutes < 60
+        ? `${minutes}m ago`
+        : minutes < 1440
+          ? `${Math.floor(minutes / 60)}h ago`
+          : `${Math.floor(minutes / 1440)}d ago`
+
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <Clock className="w-3.5 h-3.5" />
+      {text}
+    </span>
+  )
+}
+
+function money(value: number) {
+  return `Rs. ${Math.round(value).toLocaleString("en-US")}`
+}
+
+function formatFull(date: Date | string) {
+  return new Date(date).toLocaleString("en-US", {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}
+
+function formatTime(date: Date | string) {
+  return new Date(date).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}
+
+function formatDay(date: Date | string) {
+  return new Date(date).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+  })
+}
+
+function titleCase(value: string) {
+  return value.charAt(0) + value.slice(1).toLowerCase()
 }

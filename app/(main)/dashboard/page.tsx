@@ -2,7 +2,6 @@ import { Suspense } from "react"
 import {
   getDashboardOverview,
   getMenuPerformance,
-  getRushHeatmap,
 } from "@/lib/actions/dashboard/dashboard"
 import { parseRange } from "@/types/dashboard.types"
 
@@ -11,9 +10,7 @@ import KpiCards from "@/components/dashboard/overview/kpi-cards"
 import RevenueChart from "@/components/dashboard/overview/revenue-chart"
 import ChannelTrend from "@/components/dashboard/overview/channel-trend"
 import SalesMix from "@/components/dashboard/overview/sales-mix"
-import PeakHours from "@/components/dashboard/overview/peak-hours"
 import PaymentMix from "@/components/dashboard/overview/payment-mix"
-import RushHeatmapCard from "@/components/dashboard/overview/rush-heatmap"
 import TopItems from "@/components/dashboard/overview/top-items"
 import CategoryPerformance from "@/components/dashboard/overview/category-performance"
 import MenuHealth from "@/components/dashboard/overview/menu-health"
@@ -21,7 +18,6 @@ import CustomerInsights from "@/components/dashboard/overview/customer-insights"
 import DeliveryAreas from "@/components/dashboard/overview/delivery-areas"
 import { Section } from "@/components/dashboard/overview/ui"
 import {
-  ChartSkeleton,
   HeaderSkeleton,
   MenuSkeleton,
   OverviewSkeleton,
@@ -114,19 +110,6 @@ async function PerformanceSection({
         </div>
       </Section>
 
-      <Section title="Operations">
-        <div className="grid gap-5 xl:grid-cols-3">
-          {/* Nested boundary: the heatmap reads its own (much larger)
-              window, so it streams in without holding up this section. */}
-          <div className="xl:col-span-2">
-            <Suspense fallback={<ChartSkeleton height={300} />}>
-              <HeatmapCard />
-            </Suspense>
-          </div>
-          <PeakHours hourly={data.hourly} busiestHour={data.busiestHour} />
-        </div>
-      </Section>
-
       <Section title="Customers">
         <div className={showDeliveryZones ? "grid gap-5 xl:grid-cols-2" : "grid"}>
           <CustomerInsights data={data} />
@@ -135,13 +118,6 @@ async function PerformanceSection({
       </Section>
     </div>
   )
-}
-
-async function HeatmapCard() {
-  const heatmap = await getRushHeatmap()
-  if (!heatmap) return null
-
-  return <RushHeatmapCard data={heatmap} />
 }
 
 async function MenuSection({ searchParams }: { searchParams: SearchParams }) {

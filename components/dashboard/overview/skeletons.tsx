@@ -34,11 +34,14 @@ export function OverviewSkeleton() {
           ))}
         </div>
 
-        <div className="flex flex-wrap gap-x-10 gap-y-4 py-4 border-t border-border">
+        <div className="flex flex-wrap gap-x-2 gap-y-1 py-3 border-t border-border">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className={`h-3 w-20 ${BLOCK}`} />
-              <Skeleton className={`h-4 w-14 ${BLOCK}`} />
+            <div key={i} className="flex items-center gap-2.5 px-2.5 py-2">
+              <Skeleton className={`w-7 h-7 rounded-md ${BLOCK}`} />
+              <div className="space-y-1.5">
+                <Skeleton className={`h-2.5 w-20 ${BLOCK}`} />
+                <Skeleton className={`h-3.5 w-14 ${BLOCK}`} />
+              </div>
             </div>
           ))}
         </div>
@@ -50,14 +53,6 @@ export function OverviewSkeleton() {
           <ChartSkeleton className="xl:col-span-2" height={340} />
           <ChartSkeleton height={340} />
         </div>
-        <div className="grid gap-5 xl:grid-cols-3">
-          <ChartSkeleton className="xl:col-span-2" height={300} />
-          <ChartSkeleton height={300} />
-        </div>
-      </SectionSkeleton>
-
-      {/* Operations */}
-      <SectionSkeleton>
         <div className="grid gap-5 xl:grid-cols-3">
           <ChartSkeleton className="xl:col-span-2" height={300} />
           <ChartSkeleton height={300} />

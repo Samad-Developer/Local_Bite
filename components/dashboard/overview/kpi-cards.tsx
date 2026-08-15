@@ -1,3 +1,14 @@
+import {
+  Bike,
+  Clock,
+  Repeat,
+  ShoppingBasket,
+  TicketPercent,
+  Timer,
+  Users,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DeltaPill, Sparkline } from "./ui"
 import {
@@ -87,14 +98,23 @@ export default function KpiCards({ data }: { data: OverviewData }) {
 }
 
 // ─── Secondary metric row ─────────────────────────────
-// Was eight boxed cells; now a plain definition list that recedes
-// behind the headline numbers.
+// Eight supporting numbers as compact icon chips. The icon carries the
+// identity so the label can stay small, which keeps the whole strip reading
+// as metadata under the headline figures rather than competing with them.
+
+type Tone = "good" | "warn" | "plain"
 
 function MiniStats({ data }: { data: OverviewData }) {
-  const stats = [
+  const stats: {
+    label: string
+    value: string
+    icon: LucideIcon
+    tone: Tone
+  }[] = [
     {
       label: "Outstanding",
       value: formatCurrency(data.outstanding),
+      icon: Wallet,
       tone: data.outstanding > 0 ? "warn" : "plain",
     },
     {
@@ -103,26 +123,31 @@ function MiniStats({ data }: { data: OverviewData }) {
         data.avgFulfillmentMinutes === null
           ? "—"
           : formatDuration(data.avgFulfillmentMinutes),
+      icon: Timer,
       tone: "plain",
     },
     {
       label: "Customers",
       value: formatNumber(data.uniqueCustomers),
+      icon: Users,
       tone: "plain",
     },
     {
       label: "Repeat rate",
       value: formatPercent(data.repeatRate, 0),
+      icon: Repeat,
       tone: data.repeatRate >= 30 ? "good" : "plain",
     },
     {
       label: "Discounts given",
       value: formatCurrency(data.discountGiven),
+      icon: TicketPercent,
       tone: "plain",
     },
     {
       label: "Delivery fees",
       value: formatCurrency(data.deliveryFeeEarned),
+      icon: Bike,
       tone: "plain",
     },
     {
@@ -131,31 +156,58 @@ function MiniStats({ data }: { data: OverviewData }) {
         data.orders.current > 0
           ? (data.itemsSold / data.orders.current).toFixed(1)
           : "—",
+      icon: ShoppingBasket,
       tone: "plain",
     },
     {
       label: "Peak hour",
       value: data.busiestHour === null ? "—" : formatHour(data.busiestHour),
+      icon: Clock,
       tone: "plain",
     },
   ]
 
-  const toneClass: Record<string, string> = {
+  // Only a chip that wants acting on gets colour; the rest stay neutral so
+  // the strip doesn't turn into a traffic light.
+  const valueTone: Record<Tone, string> = {
     good: "text-[#16a34a]",
     warn: "text-[#ca8a04]",
     plain: "text-title",
   }
 
+  const iconTone: Record<Tone, string> = {
+    good: "bg-[#f0fdf4] text-[#16a34a]",
+    warn: "bg-[#fefce8] text-[#ca8a04]",
+    plain: "bg-[#f4f5f7] text-label",
+  }
+
   return (
-    <dl className="flex flex-wrap gap-x-10 gap-y-4 py-4 border-t border-border">
+    <dl className="flex flex-wrap gap-x-2 gap-y-1 py-3 border-t border-border">
       {stats.map((stat) => (
-        <div key={stat.label}>
-          <dt className="text-xs text-soft">{stat.label}</dt>
-          <dd
-            className={`text-sm font-medium tabular-nums mt-1 ${toneClass[stat.tone]}`}
+        <div
+          key={stat.label}
+          className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 hover:bg-[#fafbfc] transition-colors duration-150"
+        >
+          <span
+            className={cn(
+              "flex items-center justify-center w-7 h-7 rounded-md shrink-0",
+              iconTone[stat.tone],
+            )}
           >
-            {stat.value}
-          </dd>
+            <stat.icon className="w-3.5 h-3.5" strokeWidth={1.75} />
+          </span>
+
+          <div className="min-w-0">
+            <dt className="text-[11px] text-soft leading-none">{stat.label}</dt>
+            <dd
+              className={cn(
+                "text-sm font-medium tabular-nums leading-none mt-1.5",
+                valueTone[stat.tone],
+              )}
+            >
+              {stat.value}
+            </dd>
+          </div>
         </div>
       ))}
     </dl>

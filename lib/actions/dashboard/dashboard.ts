@@ -15,11 +15,9 @@ import type {
   BreakdownSlice,
   ChannelTrendPoint,
   ComparisonPoint,
-  HeatCell,
   MenuPerformance,
   OverviewData,
   RangeKey,
-  RushHeatmap,
   TopCustomer,
   TopItem,
   TrendPoint,
@@ -374,81 +372,6 @@ export async function getMenuPerformance(range: RangeKey): Promise<MenuPerforman
     bestsellerCount: menuItems.filter((m) => m.isBestseller).length,
     hiddenCategories,
     activeDiscounts,
-  }
-}
-
-// ─── Rush heatmap ─────────────────────────────────────
-// A weekly rhythm needs several weeks to show up, so this ignores the
-// range switcher and always reads a fixed trailing window.
-
-const HEATMAP_WEEKS = 8
-
-export async function getRushHeatmap(): Promise<RushHeatmap | null> {
-  const session = await auth()
-  if (!session) return null
-
-  const end = new Date()
-  const start = startOfDay(subDays(end, HEATMAP_WEEKS * 7 - 1))
-
-  const orders = await prisma.order.findMany({
-    where: {
-      restaurantId: session.user.restaurantId,
-      status: { not: "CANCELLED" },
-      createdAt: { gte: start, lte: end },
-    },
-    select: { createdAt: true, total: true },
-  })
-
-  // 7 days × 24 hours, Monday first.
-  const grid: HeatCell[] = []
-  for (let day = 0; day < 7; day++) {
-    for (let hour = 0; hour < 24; hour++) {
-      grid.push({ day, hour, orders: 0, revenue: 0 })
-    }
-  }
-
-  for (const o of orders) {
-    const day = (o.createdAt.getDay() + 6) % 7
-    const cell = grid[day * 24 + o.createdAt.getHours()]
-    cell.orders += 1
-    cell.revenue += o.total
-  }
-
-  const active = grid.filter((c) => c.orders > 0)
-
-  if (active.length === 0) {
-    return {
-      cells: [],
-      startHour: 0,
-      endHour: 0,
-      maxOrders: 0,
-      totalOrders: 0,
-      weeks: HEATMAP_WEEKS,
-      busiest: null,
-      quietest: null,
-    }
-  }
-
-  // Clip to the hours actually traded, padded by one, so the grid isn't
-  // mostly empty columns for a restaurant that opens at noon.
-  const startHour = Math.max(0, Math.min(...active.map((c) => c.hour)) - 1)
-  const endHour = Math.min(23, Math.max(...active.map((c) => c.hour)) + 1)
-
-  const cells = grid.filter((c) => c.hour >= startHour && c.hour <= endHour)
-  const maxOrders = Math.max(...cells.map((c) => c.orders))
-
-  const busiest = active.reduce((best, c) => (c.orders > best.orders ? c : best))
-  const quietest = active.reduce((worst, c) => (c.orders < worst.orders ? c : worst))
-
-  return {
-    cells,
-    startHour,
-    endHour,
-    maxOrders,
-    totalOrders: active.reduce((acc, c) => acc + c.orders, 0),
-    weeks: HEATMAP_WEEKS,
-    busiest,
-    quietest,
   }
 }
 

@@ -1,13 +1,18 @@
+"use client"
+
+import { useState } from "react"
 import { PieChart } from "lucide-react"
-import { CardHeading, DashCard, EmptyState, TYPE_COLORS } from "./ui"
+import { cn } from "@/lib/utils"
+import { CardHeading, DashCard, EmptyState, TYPE_COLORS, slotColor } from "./ui"
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/utils/format"
 import type { BreakdownSlice } from "@/types/dashboard.types"
-
-const FALLBACK_COLORS = ["#f97316", "#1f2937", "#6b7280", "#0ea5e9", "#16a34a"]
 
 export default function SalesMix({ slices }: { slices: BreakdownSlice[] }) {
   const total = slices.reduce((acc, s) => acc + s.revenue, 0)
   const totalOrders = slices.reduce((acc, s) => acc + s.orders, 0)
+  const [active, setActive] = useState<string | null>(null)
+
+  const shown = active ? slices.find((s) => s.key === active) : null
 
   return (
     <DashCard className="flex flex-col">
@@ -29,40 +34,70 @@ export default function SalesMix({ slices }: { slices: BreakdownSlice[] }) {
           <Donut
             slices={slices}
             total={total}
-            centerValue={formatCurrency(total)}
-            centerLabel={`${formatNumber(totalOrders)} orders`}
+            active={active}
+            onActiveChange={setActive}
+            // The centre follows the hover so the reader never has to hold a
+            // colour in their head while looking down at the legend.
+            centerValue={
+              shown ? formatCurrency(shown.revenue) : formatCurrency(total)
+            }
+            centerLabel={
+              shown
+                ? `${shown.label} · ${formatPercent(shown.share, 0)}`
+                : `${formatNumber(totalOrders)} orders`
+            }
           />
 
-          <div className="w-full mt-6 space-y-3.5">
-            {slices.map((slice, i) => (
-              <div key={slice.key} className="flex items-center gap-3">
-                <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{
-                    backgroundColor:
-                      TYPE_COLORS[slice.key] ??
-                      FALLBACK_COLORS[i % FALLBACK_COLORS.length],
-                  }}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-title truncate">{slice.label}</p>
-                  <p className="text-xs text-soft mt-0.5">
-                    {formatNumber(slice.orders)} order
-                    {slice.orders === 1 ? "" : "s"} · avg{" "}
-                    {formatCurrency(slice.revenue / Math.max(1, slice.orders))}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-medium text-title tabular-nums">
-                    {formatCurrency(slice.revenue)}
-                  </p>
-                  <p className="text-xs text-soft tabular-nums mt-0.5">
-                    {formatPercent(slice.share, 0)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ul className="w-full mt-6 space-y-1">
+            {slices.map((slice, i) => {
+              const color = TYPE_COLORS[slice.key] ?? slotColor(i)
+              const dimmed = active !== null && active !== slice.key
+
+              return (
+                <li key={slice.key}>
+                  <button
+                    type="button"
+                    onMouseEnter={() => setActive(slice.key)}
+                    onMouseLeave={() => setActive(null)}
+                    onFocus={() => setActive(slice.key)}
+                    onBlur={() => setActive(null)}
+                    className={cn(
+                      "w-full flex items-center gap-3 text-left rounded-lg px-2 py-2 -mx-2 cursor-default",
+                      "transition-[background-color,opacity] duration-200",
+                      active === slice.key && "bg-elevated",
+                      dimmed && "opacity-45",
+                    )}
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform duration-200"
+                      style={{
+                        backgroundColor: color,
+                        transform: active === slice.key ? "scale(1.35)" : "none",
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-title truncate">{slice.label}</p>
+                      <p className="text-xs text-soft mt-0.5">
+                        {formatNumber(slice.orders)} order
+                        {slice.orders === 1 ? "" : "s"} · avg{" "}
+                        {formatCurrency(slice.revenue / Math.max(1, slice.orders))}
+                      </p>
+                    </div>
+                    {/* Direct value labels are the relief channel that lets
+                        slot 1 sit below the 3:1 mark contrast floor. */}
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-medium text-title tabular-nums">
+                        {formatCurrency(slice.revenue)}
+                      </p>
+                      <p className="text-xs text-soft tabular-nums mt-0.5">
+                        {formatPercent(slice.share, 0)}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
         </div>
       )}
     </DashCard>
@@ -71,66 +106,102 @@ export default function SalesMix({ slices }: { slices: BreakdownSlice[] }) {
 
 // ─── Donut ────────────────────────────────────────────
 
+const RADIUS = 54
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS
+const STROKE = 12
+
 export function Donut({
   slices,
   total,
   centerValue,
   centerLabel,
   colors = TYPE_COLORS,
+  active,
+  onActiveChange,
 }: {
   slices: BreakdownSlice[]
   total: number
   centerValue: string
   centerLabel: string
   colors?: Record<string, string>
+  active?: string | null
+  onActiveChange?: (key: string | null) => void
 }) {
-  const radius = 54
-  const circumference = 2 * Math.PI * radius
-
   // Pre-compute each arc's length and starting offset so the render stays pure.
-  const arcs = slices.reduce<{ slice: BreakdownSlice; length: number; offset: number }[]>(
-    (acc, slice) => {
-      const fraction = total > 0 ? slice.revenue / total : 0
-      const length = fraction * circumference
-      const offset = acc.length ? acc[acc.length - 1].offset + acc[acc.length - 1].length : 0
-      acc.push({ slice, length, offset })
-      return acc
-    },
-    [],
-  )
+  const arcs = slices.reduce<
+    { slice: BreakdownSlice; length: number; offset: number }[]
+  >((acc, slice) => {
+    const fraction = total > 0 ? slice.revenue / total : 0
+    // A 2px surface gap separates touching arcs — the spacer, not a stroke,
+    // is what keeps neighbouring segments distinct.
+    const length = Math.max(0, fraction * CIRCUMFERENCE - 2)
+    const offset = acc.length
+      ? acc[acc.length - 1].offset + (acc[acc.length - 1].length + 2)
+      : 0
+    acc.push({ slice, length, offset })
+    return acc
+  }, [])
 
   return (
-    <div className="relative w-[164px] h-[164px]">
-      <svg viewBox="0 0 128 128" className="w-full h-full -rotate-90">
+    <div className="relative w-[172px] h-[172px]">
+      <svg
+        viewBox="0 0 128 128"
+        className="w-full h-full -rotate-90 overflow-visible"
+        onMouseLeave={() => onActiveChange?.(null)}
+      >
         <circle
           cx="64"
           cy="64"
-          r={radius}
+          r={RADIUS}
           fill="none"
           stroke="#f1f2f4"
-          strokeWidth="11"
+          strokeWidth={STROKE}
         />
-        {arcs.map(({ slice, length, offset }, i) => (
-          <circle
-            key={slice.key}
-            cx="64"
-            cy="64"
-            r={radius}
-            fill="none"
-            stroke={colors[slice.key] ?? FALLBACK_COLORS[i % FALLBACK_COLORS.length]}
-            strokeWidth="11"
-            strokeDasharray={`${length} ${circumference - length}`}
-            strokeDashoffset={-offset}
-            strokeLinecap="butt"
-          />
-        ))}
+
+        {arcs.map(({ slice, length, offset }, i) => {
+          const color = colors[slice.key] ?? slotColor(i)
+          const isActive = active === slice.key
+          const dimmed = active != null && !isActive
+
+          return (
+            <circle
+              key={slice.key}
+              cx="64"
+              cy="64"
+              r={RADIUS}
+              fill="none"
+              stroke={color}
+              strokeWidth={isActive ? STROKE + 4 : STROKE}
+              // Full length is the rendered default, so the ring is correct
+              // in the SSR markup and stays correct if JS never arrives. The
+              // sweep is a pure CSS keyframe layered on top — it needs no
+              // hydration and cannot leave the arc stuck at zero.
+              strokeDasharray={`${length} ${CIRCUMFERENCE}`}
+              strokeDashoffset={-offset}
+              strokeLinecap="butt"
+              opacity={dimmed ? 0.35 : 1}
+              onMouseEnter={() => onActiveChange?.(slice.key)}
+              className="donut-arc"
+              style={{
+                ["--arc-len" as string]: `${length}px`,
+                ["--arc-gap" as string]: `${CIRCUMFERENCE}px`,
+                // Stagger so the ring assembles segment by segment.
+                ["--arc-delay" as string]: `${i * 110}ms`,
+              }}
+            />
+          )
+        })}
       </svg>
 
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8">
-        <span className="text-base font-semibold text-title tabular-nums leading-tight">
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-9 pointer-events-none">
+        {/* Proportional figures: tabular-nums makes a display-size number
+            look loose. */}
+        <span className="text-[17px] font-semibold text-title leading-tight">
           {centerValue}
         </span>
-        <span className="text-[11px] text-soft mt-1">{centerLabel}</span>
+        <span className="text-[11px] text-soft mt-1 leading-tight">
+          {centerLabel}
+        </span>
       </div>
     </div>
   )

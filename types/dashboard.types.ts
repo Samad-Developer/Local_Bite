@@ -126,26 +126,3 @@ export type MenuPerformance = {
   activeDiscounts: number
 }
 
-// ─── Rush heatmap ─────────────────────────────────────
-// Deliberately independent of the range switcher: a weekly rhythm only
-// emerges over several weeks, so this always reads a fixed trailing window.
-
-export type HeatCell = {
-  /** 0 = Monday. */
-  day: number
-  hour: number
-  orders: number
-  revenue: number
-}
-
-export type RushHeatmap = {
-  cells: HeatCell[]
-  /** Trading window actually observed, so dead hours aren't drawn. */
-  startHour: number
-  endHour: number
-  maxOrders: number
-  totalOrders: number
-  weeks: number
-  busiest: HeatCell | null
-  quietest: HeatCell | null
-}

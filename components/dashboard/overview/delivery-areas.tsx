@@ -1,6 +1,6 @@
 import type { Route } from "next"
 import { MapPin } from "lucide-react"
-import { CardHeading, CardLink, DashCard, EmptyState, RANK_RAMP, ShareBar } from "./ui"
+import { CardHeading, CardLink, DashCard, EmptyState, ShareBar } from "./ui"
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/utils/format"
 import type { BreakdownSlice } from "@/types/dashboard.types"
 
@@ -32,7 +32,7 @@ export default function DeliveryAreas({ areas }: { areas: BreakdownSlice[] }) {
         />
       ) : (
         <div className="divide-y divide-border">
-          {areas.slice(0, 6).map((area, i) => (
+          {areas.slice(0, 6).map((area) => (
             <div key={area.key} className="px-5 py-3.5">
               <div className="flex items-center justify-between gap-3 mb-2">
                 <span className="text-sm text-title truncate">{area.label}</span>
@@ -41,10 +41,7 @@ export default function DeliveryAreas({ areas }: { areas: BreakdownSlice[] }) {
                 </span>
               </div>
 
-              <ShareBar
-                value={area.share}
-                color={RANK_RAMP[Math.min(i, RANK_RAMP.length - 1)]}
-              />
+              <ShareBar value={area.share} />
 
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs text-soft">

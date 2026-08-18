@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, LayoutGrid } from "lucide-react"
 import { FieldConfig } from "@/components/shared/form/field-config.types"
 
-// ── Type ───────────────────────────────────────────
-
 export type Category = {
   id: string
   name: string
@@ -16,8 +14,6 @@ export type Category = {
   isVisible: boolean
   _count: { menuItems: number }
 }
-
-// ── Schema ─────────────────────────────────────────
 
 export const categorySchema = z.object({
   name: z.string().min(1, "Category name is required").max(50, "Name too long"),
@@ -27,15 +23,11 @@ export const categorySchema = z.object({
 
 export type CategoryFormData = z.infer<typeof categorySchema>
 
-// ── Default Values ─────────────────────────────────
-
 export const categoryDefaultValues: CategoryFormData = {
   name: "",
   sortOrder: 0,
   isVisible: true,
 }
-
-// ── Fields Config (drives FormRenderer) ────────────
 
 export const categoryFields: FieldConfig[] = [
   {
@@ -58,8 +50,6 @@ export const categoryFields: FieldConfig[] = [
     description: "Hide this category without deleting it",
   },
 ]
-
-// ── Table Columns ───────────────────────────────────
 
 export const categoryColumns = (
   onEdit: (row: Category) => void,

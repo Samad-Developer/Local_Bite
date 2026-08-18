@@ -93,7 +93,6 @@ export async function createMenuItem(data: {
   if (!session) return { error: "Not authenticated" };
 
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    // Create new menu item
     const item = await tx.menuItem.create({
       data: {
         name: data.name.trim(),
@@ -107,7 +106,6 @@ export async function createMenuItem(data: {
       },
     });
 
-    // auto create default varaint with base price
     await tx.variant.create({
       data: {
         name: "Regular",
@@ -119,7 +117,6 @@ export async function createMenuItem(data: {
       },
     });
 
-    // Create menu item images
     if (data.imageUrls.length > 0) {
       await tx.menuItemImage.createMany({
         data: data.imageUrls.map((url, index) => ({

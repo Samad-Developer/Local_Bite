@@ -36,8 +36,6 @@ export default function ChannelTrend({
 
   const grandTotal = points.reduce((acc, p) => acc + p.total, 0)
 
-  // Per-channel totals drive the legend and the ordering of the bands:
-  // biggest channel on the bottom keeps the stack visually stable.
   const totals = useMemo(() => {
     const map = new Map<string, number>()
     for (const key of keys) {
@@ -60,15 +58,12 @@ export default function ChannelTrend({
   const toX = (i: number) => (points.length > 1 ? (i / (points.length - 1)) * 100 : 50)
   const toY = (v: number) => 100 - (ceiling ? (v / ceiling) * 94 : 0)
 
-  /** Value of `key` in bucket `i`, already normalised for the active mode. */
   const valueAt = (key: string, i: number) => {
     const raw = points[i].values[key] ?? 0
     if (mode === "value") return raw
     return points[i].total > 0 ? (raw / points[i].total) * 100 : 0
   }
 
-  // Cumulative upper edge of each band, so band n is drawn between the
-  // running total below it and the running total including it.
   const bands = useMemo(() => {
     const below = new Array(points.length).fill(0)
 
@@ -133,7 +128,6 @@ export default function ChannelTrend({
       />
 
       <div className="p-5">
-        {/* ── Readout ── */}
         <div className="flex items-baseline gap-2.5 mb-4 h-5">
           {active ? (
             <>
@@ -151,7 +145,6 @@ export default function ChannelTrend({
           )}
         </div>
 
-        {/* ── Plot ── */}
         <div className="relative" style={{ height: CHART_HEIGHT }}>
           {[0, 0.5, 1].map((t) => (
             <div
@@ -190,8 +183,6 @@ export default function ChannelTrend({
                   d={bandPath(lower, upper, toX, toY)}
                   fill={TYPE_COLORS[key] ?? slotColor(i)}
                   fillOpacity={0.9}
-                  // A 2px surface stroke is the gap that separates touching
-                  // bands — white doing the work, not a darker outline.
                   stroke="#ffffff"
                   strokeWidth={2}
                   vectorEffect="non-scaling-stroke"
@@ -257,7 +248,6 @@ export default function ChannelTrend({
           </div>
         </div>
 
-        {/* ── X axis ── */}
         <div className="relative h-4 ml-14 mt-3">
           {points.map((point, i) => {
             if (!labelVisible(i, points.length)) return null
@@ -279,7 +269,6 @@ export default function ChannelTrend({
           })}
         </div>
 
-        {/* ── Legend with period totals ── */}
         <div className="flex flex-wrap gap-x-6 gap-y-2 mt-5 pt-4 border-t border-border">
           {ordered.map((key) => {
             const value = totals.get(key) ?? 0
@@ -307,7 +296,6 @@ export default function ChannelTrend({
   )
 }
 
-/** Closed polygon: along the top edge, then back along the bottom edge. */
 function bandPath(
   lower: number[],
   upper: number[],

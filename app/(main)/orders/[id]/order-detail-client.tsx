@@ -37,10 +37,6 @@ import { updateOrderStatus } from "@/lib/actions/orders/orders"
 import type { OrderDetail } from "@/lib/actions/orders/orders"
 import type { OrderStatus } from "@prisma/client"
 
-// ── Status flow ────────────────────────────────────
-// The happy path an order walks. `PIPELINE` drives the stepper, so adding a
-// stage here adds it to the timeline too — the two can't drift apart.
-
 const PIPELINE = [
   { status: "NEW", label: "Placed", icon: ShoppingBag },
   { status: "CONFIRMED", label: "Confirmed", icon: Check },
@@ -82,7 +78,6 @@ const TYPE_META: Record<string, { label: string; icon: typeof Bike }> = {
   DELIVERY: { label: "Delivery", icon: Bike },
 }
 
-// NONE is intentionally absent — it renders no chip at all.
 const SPICY_LABEL: Record<string, string> = {
   MILD: "Mild",
   MEDIUM: "Medium",
@@ -93,10 +88,6 @@ const CARD =
   "bg-surface border border-border rounded-xl shadow-[0_1px_2px_rgba(17,17,17,0.04),0_8px_24px_-12px_rgba(17,17,17,0.10)]"
 
 export default function OrderDetailClient({ order }: { order: OrderDetail }) {
-  // Optimistic override, derived during render rather than mirrored into
-  // state: once the server catches up, `base` no longer matches and we fall
-  // straight back to server truth. A copy in state would go stale whenever
-  // the order changed from another screen.
   const [optimistic, setOptimistic] = useState<{
     base: string
     value: string
@@ -105,11 +96,6 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
   const currentStatus =
     optimistic && optimistic.base === order.status ? optimistic.value : order.status
 
-  // Deliberately NOT useTransition's isPending. The server action calls
-  // revalidatePath on this very route, so the transition stays pending
-  // through a full RSC refetch — which is why the button used to sit on
-  // "Updating…" long after the status had actually changed. This clears the
-  // moment the action itself resolves.
   const [submitting, setSubmitting] = useState<"advance" | "cancel" | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -152,7 +138,6 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
 
   return (
     <div className="w-full space-y-5 pb-10">
-      {/* ── Header ── */}
       <div className={cn(CARD, "px-5 py-4 lg:px-6 lg:py-5")}>
         <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
           <div className="flex items-start gap-3 min-w-0">
@@ -205,14 +190,8 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
         </div>
       </div>
 
-      {/* ── Progress ── */}
       <Progress status={currentStatus} />
 
-      {/* ── Facts strip ── */}
-      {/* Wraps from 2 up to 6 across, so the row stays full on any width
-          instead of leaving a ragged gap on the right. The 1px gap over a
-          border-coloured background draws the grid lines, which `divide-x`
-          cannot do once the cells wrap onto a second row. */}
       <div
         className={cn(
           CARD,
@@ -233,9 +212,6 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
           hint={paid ? "Paid" : "Pending"}
           tone={paid ? "good" : "warn"}
         />
-        {/* Always rendered: six cells divide evenly into the 2/3/6-column
-            layouts, so omitting one would leave an empty grid track showing
-            the border colour as a grey block. */}
         <Fact
           icon={Timer}
           label="Longest prep"
@@ -256,12 +232,7 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
         />
       </div>
 
-      {/* ── Body ── */}
-      {/* items-start stops the shorter column being stretched to the taller
-          one, which is what left a tall empty gap inside the items card on
-          small orders. */}
       <div className="grid gap-5 xl:grid-cols-12 items-start">
-        {/* Items */}
         <div className="xl:col-span-8 space-y-5">
         <section className={CARD}>
           <header className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-border">
@@ -371,8 +342,6 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
 
         </section>
 
-          {/* Under the items: the two things that always have content, so
-              the column keeps its weight even on a three-line order. */}
           <div className="grid gap-5 md:grid-cols-2">
             <Timeline order={order} status={currentStatus} />
 
@@ -413,9 +382,7 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
           </div>
         </div>
 
-        {/* Right rail — sticks alongside a long item list. */}
         <div className="xl:col-span-4 space-y-5 xl:sticky xl:top-6">
-          {/* Actions first: this is what the page is opened to do. */}
           <section className={cn(CARD, "p-5 space-y-3")}>
             {nextAction ? (
               <>
@@ -463,7 +430,6 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
             )}
           </section>
 
-          {/* Customer */}
           <section className={CARD}>
             <header className="px-5 py-3.5 border-b border-border">
               <h2 className="text-sm font-semibold text-title">Customer</h2>
@@ -502,7 +468,6 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
             </div>
           </section>
 
-          {/* Bill */}
           <section className={CARD}>
             <header className="px-5 py-3.5 border-b border-border">
               <h2 className="text-sm font-semibold text-title">Bill</h2>
@@ -556,7 +521,6 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
         </div>
       </div>
 
-      {/* Cancelling can't be undone from this screen, so it asks first. */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
@@ -587,8 +551,6 @@ export default function OrderDetailClient({ order }: { order: OrderDetail }) {
     </div>
   )
 }
-
-// ─── Progress stepper ─────────────────────────────────
 
 function Progress({ status }: { status: string }) {
   if (status === "CANCELLED") {
@@ -642,9 +604,6 @@ function Progress({ status }: { status: string }) {
             </span>
           </li>,
 
-          // Connectors are their own equal-basis items rather than living
-          // inside a stage, so they all render the same length regardless of
-          // how long the stage labels are.
           i < PIPELINE.length - 1 ? (
             <li
               key={`${stage.status}-line`}
@@ -662,10 +621,6 @@ function Progress({ status }: { status: string }) {
     </ol>
   )
 }
-
-// ─── Timeline ─────────────────────────────────────────
-// Only two timestamps exist on an order (createdAt / updatedAt), so this
-// reports exactly those rather than inventing a per-stage history.
 
 function Timeline({
   order,
@@ -730,8 +685,6 @@ function Moment({
   )
 }
 
-// ─── Small pieces ─────────────────────────────────────
-
 function Fact({
   icon: Icon,
   label,
@@ -793,12 +746,6 @@ function Row({
   )
 }
 
-/**
- * Reading the clock during render is impure — it would differ between the
- * server and client passes. So this renders nothing until mounted, then
- * ticks every half minute, which is what a kitchen screen actually wants.
- * It sits last in its row so appearing shifts nothing beside it.
- */
 function RelativeTime({ date }: { date: Date | string }) {
   const [now, setNow] = useState<number | null>(null)
 

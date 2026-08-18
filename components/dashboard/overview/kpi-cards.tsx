@@ -57,7 +57,6 @@ export default function KpiCards({ data }: { data: OverviewData }) {
 
   return (
     <div className="border-y border-border">
-      {/* ── Headline metrics ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 divide-border xl:divide-x">
         {cards.map((card, i) => (
           <div
@@ -82,7 +81,6 @@ export default function KpiCards({ data }: { data: OverviewData }) {
 
             <p className="text-xs text-soft mt-1.5 truncate">{card.footnote}</p>
 
-            {/* Fixed slot keeps all four columns the same height. */}
             <div className="h-6 mt-3">
               {card.spark && card.spark.some((v) => v > 0) && (
                 <Sparkline data={card.spark} />
@@ -96,11 +94,6 @@ export default function KpiCards({ data }: { data: OverviewData }) {
     </div>
   )
 }
-
-// ─── Secondary metric row ─────────────────────────────
-// Eight supporting numbers as compact icon chips. The icon carries the
-// identity so the label can stay small, which keeps the whole strip reading
-// as metadata under the headline figures rather than competing with them.
 
 type Tone = "good" | "warn" | "plain"
 
@@ -167,8 +160,6 @@ function MiniStats({ data }: { data: OverviewData }) {
     },
   ]
 
-  // Only a chip that wants acting on gets colour; the rest stay neutral so
-  // the strip doesn't turn into a traffic light.
   const valueTone: Record<Tone, string> = {
     good: "text-[#16a34a]",
     warn: "text-[#ca8a04]",

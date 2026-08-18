@@ -13,7 +13,6 @@ export async function saveItemVariants(data: {
   const session = await auth()
   if (!session) return { error: "Not authenticated" }
 
-  // validate at least one default variant exists
   const hasDefault = data.variants
     .filter((v) => !v.deleted)
     .some((v) => v.isDefault)
@@ -27,7 +26,6 @@ export async function saveItemVariants(data: {
     for (const variant of data.variants) {
       const isNew = variant.id.startsWith("temp_")
 
-      // ── deleted ──
       if (variant.deleted) {
         if (!isNew) {
           await tx.variant.delete({ where: { id: variant.id } })
@@ -35,7 +33,6 @@ export async function saveItemVariants(data: {
         continue
       }
 
-      // ── create or update variant ──
       let variantId: string
 
       if (isNew) {
@@ -63,7 +60,6 @@ export async function saveItemVariants(data: {
         variantId = variant.id
       }
 
-      // ── addon groups ──
       for (const group of variant.addonGroups) {
         const isNewGroup = group.id.startsWith("temp_")
 
@@ -103,7 +99,6 @@ export async function saveItemVariants(data: {
           groupId = group.id
         }
 
-        // ── addons ──
         for (const addon of group.addons) {
           const isNewAddon = addon.id.startsWith("temp_")
 
@@ -187,8 +182,6 @@ export async function saveItemVariants(data: {
 
 
 
-// ── Variant Actions ────────────────────────────────
-
 export async function getVariants(menuItemId: string) {
   const session = await auth()
   if (!session) return []
@@ -219,7 +212,6 @@ export async function createVariant(data: {
   const session = await auth()
   if (!session) return { error: "Not authenticated" }
 
-  // if new variant is default, remove default from others
   if (data.isDefault) {
     await prisma.variant.updateMany({
       where: { menuItemId: data.menuItemId },
@@ -290,7 +282,6 @@ export async function deleteVariant(id: string) {
 
   if (!variant) return { error: "Variant not found" }
 
-  // check if it is the only variant
   const count = await prisma.variant.count({
     where: { menuItemId: variant.menuItemId },
   })

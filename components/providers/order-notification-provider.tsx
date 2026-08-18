@@ -12,7 +12,6 @@ type NewOrderData = {
   total: number;
 } | null;
 
-// Poora change event — INSERT/UPDATE/DELETE teeno ke liye
 type OrderChangeEvent = {
   eventType: "INSERT" | "UPDATE" | "DELETE";
   order: any;
@@ -53,9 +52,6 @@ export function OrderNotificationProvider({
     }
   }, []);
 
-  // Autoplay policy: audio stays blocked until the user interacts with the page
-  // at least once. Unlock on the first gesture so the alert can fire later on
-  // its own, when the order arrives and nobody is touching the screen.
   useEffect(() => {
     function unlock() {
       unlockOrderAlert();
@@ -75,17 +71,15 @@ export function OrderNotificationProvider({
       .channel("global-order-notifications")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "orders" }, // 👈 "*" — sab events sunega
+        { event: "*", schema: "public", table: "orders" },
         (payload: RealtimePostgresChangesPayload<any>) => {
           const eventType = payload.eventType;
           const order = (payload.new ?? payload.old) as any;
 
           if (order.restaurantId !== restaurantId) return;
 
-          // Har change ko context mein bhej do — order-client isko use karega
           setLastOrderChange({ eventType, order: payload.new ?? payload.old });
 
-          // Sirf INSERT par hi buzzer/sound/notification chalega
           if (eventType === "INSERT") {
 
             playOrderAlert();

@@ -32,7 +32,6 @@ export default function TopItems({ items }: { items: TopItem[] }) {
               key={item.id}
               className="flex items-center gap-3.5 px-5 py-3.5 hover:bg-elevated transition-colors duration-150"
             >
-              {/* Only the leader gets the accent — the rest are plain numerals. */}
               <span
                 className={cn(
                   "w-4 text-xs font-semibold tabular-nums shrink-0 text-right",

@@ -3,8 +3,9 @@
 import { toast } from "sonner"
 import { useEffect, useMemo, useState } from "react"
 import { DataTable } from "@/components/shared/DataTable"
-import { columns, type Order, filterTabs } from "./config"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { columns, filterTabs, type Order } from "./config"
+import OrdersHeader from "./orders-header"
+import OrderFilters from "./order-filters"
 import { useOrderNotification } from "@/components/providers/order-notification-provider"
 
 export default function OrdersRealtime({
@@ -15,10 +16,8 @@ export default function OrdersRealtime({
   const [orders, setOrders] = useState<Order[]>(initialOrders)
   const [statusFilter, setStatusFilter] = useState<string>("")
 
-  // Apna subscription nahi — Provider ka data consume kar rahe hain
   const { lastOrderChange, clearLastOrderChange } = useOrderNotification()
 
-  // Jab bhi Provider mein naya change aaye, table update karo
   useEffect(() => {
     if (!lastOrderChange) return
 
@@ -27,7 +26,6 @@ export default function OrdersRealtime({
     if (eventType === "INSERT") {
       const newOrder = order as Order
       setOrders((prev) => {
-        // Duplicate se bachne ke liye check
         if (prev.some((o) => o.id === newOrder.id)) return prev
         return [newOrder, ...prev]
       })
@@ -56,25 +54,34 @@ export default function OrdersRealtime({
     return statusFilter ? orders.filter((o) => o.status === statusFilter) : orders
   }, [orders, statusFilter])
 
+  const counts = useMemo(() => {
+    const result: Record<string, number> = { "": orders.length }
+    for (const tab of filterTabs) {
+      if (tab.value) result[tab.value] = 0
+    }
+    for (const order of orders) {
+      if (order.status in result) result[order.status] += 1
+    }
+    return result
+  }, [orders])
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <OrdersHeader orders={orders} />
 
-      <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-        <TabsList variant="line">
-          {filterTabs.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="px-3 cursor-pointer">
-              {tab.label}
-              {tab.value === "NEW" && (
-                <span className="ml-1.5 bg-[#f97316] text-white text-xs px-1.5 py-0.5 rounded-full">
-                  {orders.filter((o) => o.status === "NEW").length}
-                </span>
-              )}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-
-      <DataTable columns={columns} data={filteredOrders} pageSize={10} searchKey="customerName" />
+      <DataTable
+        columns={columns}
+        data={filteredOrders}
+        pageSize={10}
+        searchKey="customerName"
+        toolbar={
+          <OrderFilters
+            value={statusFilter}
+            onChange={setStatusFilter}
+            counts={counts}
+          />
+        }
+      />
     </div>
   )
 }

@@ -30,26 +30,18 @@ export type Variant = {
   addonGroups: AddonGroup[]
 }
 
-// export type MenuItemWithVariants = {
-//   id: string
-//   name: string
-//   category: { id: string; name: string }
-//   images: { url: string }[]
-//   variants: Variant[]
-// }
-
 export type LocalAddon = {
-  id: string           // real id OR "temp_xxxxx"
+  id: string
   name: string
   price: number
   isAvailable: boolean
   sortOrder: number
   addonGroupId: string
-  deleted?: boolean    // marked for deletion
+  deleted?: boolean
 }
 
 export type LocalAddonGroup = {
-  id: string           // real id OR "temp_xxxxx"
+  id: string
   name: string
   isRequired: boolean
   isMultiple: boolean
@@ -62,7 +54,7 @@ export type LocalAddonGroup = {
 }
 
 export type LocalVariant = {
-  id: string           // real id OR "temp_xxxxx"
+  id: string
   name: string
   price: number
   isDefault: boolean

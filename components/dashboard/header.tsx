@@ -15,7 +15,6 @@ export default function Header({ user }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 h-16 bg-white border-b border-[#e5e7eb] flex items-center justify-between px-4">
 
-      {/* Left — Toggle + Title */}
       <div className="flex items-center gap-3">
         <SidebarTrigger
           className="
@@ -28,7 +27,6 @@ export default function Header({ user }: HeaderProps) {
         <Separator orientation="vertical" className="bg-[#e5e7eb]" />
       </div>
 
-      {/* Right — User Info */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full border bg-slate-100 flex items-center justify-center shadow-sm">
           <span className="text-black text-sm font-semibold">

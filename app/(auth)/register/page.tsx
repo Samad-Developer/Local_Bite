@@ -13,7 +13,6 @@ export default function RegisterPage() {
   const router = useRouter()
   const [state, action, isPending] = useActionState(registerOwner, null)
 
-  // redirect to login after successful registration
   useEffect(() => {
     if (state?.success) {
       router.push("/login")

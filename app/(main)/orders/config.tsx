@@ -7,8 +7,6 @@ import { Eye } from "lucide-react"
 import Link from "next/link"
 import { Route } from "next"
 
-// ── Types ──────────────────────────────────────────
-
 export type Order = {
   id: string
   orderNumber: number
@@ -27,8 +25,6 @@ export type Order = {
   items?: any[]
 }
 
-// filter tabs
-
 export const filterTabs = [
   { label: "All", value: "" },
   { label: "New", value: "NEW" },
@@ -39,18 +35,43 @@ export const filterTabs = [
   { label: "Cancelled", value: "CANCELLED" },
 ]
 
-// ── Status config (yahan bhi chahiye kyunki isi file mein use ho rahi hai) ──
+export const ACTIVE_STATUSES = ["NEW", "CONFIRMED", "PREPARING", "READY"]
 
-export const statusConfig: Record<string, { label: string; color: string }> = {
-  NEW: { label: "New", color: "bg-[#eff6ff] text-[#2563eb] border-[#bfdbfe]" },
-  CONFIRMED: { label: "Confirmed", color: "bg-[#f5f3ff] text-[#7c3aed] border-[#ddd6fe]" },
-  PREPARING: { label: "Preparing", color: "bg-[#fefce8] text-[#ca8a04] border-[#fde68a]" },
-  READY: { label: "Ready", color: "bg-[#fff7ed] text-[#f97316] border-[#fed7aa]" },
-  COMPLETED: { label: "Completed", color: "bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]" },
-  CANCELLED: { label: "Cancelled", color: "bg-[#fef2f2] text-[#dc2626] border-[#fecaca]" },
+export const statusConfig: Record<
+  string,
+  { label: string; color: string; dot: string }
+> = {
+  NEW: {
+    label: "New",
+    color: "bg-[#eff6ff] text-[#2563eb] border-[#bfdbfe]",
+    dot: "#2563eb",
+  },
+  CONFIRMED: {
+    label: "Confirmed",
+    color: "bg-[#f5f3ff] text-[#7c3aed] border-[#ddd6fe]",
+    dot: "#7c3aed",
+  },
+  PREPARING: {
+    label: "Preparing",
+    color: "bg-[#fefce8] text-[#ca8a04] border-[#fde68a]",
+    dot: "#ca8a04",
+  },
+  READY: {
+    label: "Ready",
+    color: "bg-[#fff7ed] text-[#f97316] border-[#fed7aa]",
+    dot: "#f97316",
+  },
+  COMPLETED: {
+    label: "Completed",
+    color: "bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]",
+    dot: "#16a34a",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    color: "bg-[#fef2f2] text-[#dc2626] border-[#fecaca]",
+    dot: "#dc2626",
+  },
 }
-
-// ── Helper function (component se bahar hai to yahan bhi honi chahiye) ──
 
 function formatTime(date: string) {
   const now = new Date()
@@ -59,12 +80,6 @@ function formatTime(date: string) {
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
   return `${Math.floor(diff / 3600)}h ago`
 }
-
-// ── Columns — function ke roop mein export karo (router hook ke liye) ──
-// "router" ek React hook se aata hai, isliye ise directly module-level
-// array mein use nahi kar sakte. Iska fix: columns ko function banao
-// jo component ke andar call ho, ya action wale column mein useRouter
-// ki jagah plain <Link> use karo (recommended, simpler).
 
 export const columns: ColumnDef<Order>[] = [
   {

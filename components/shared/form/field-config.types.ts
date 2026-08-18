@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// FieldConfig — the shape of one field in a form config array.
-// Add more variants here as your field types grow.
-// ─────────────────────────────────────────────────────────────
-
 export type FieldConfig =
   | TextFieldConfig
   | NumberFieldConfig
@@ -16,7 +11,7 @@ export type FieldConfig =
 interface BaseField {
   name: string
   label: string
-  description?: string  // optional helper text below the field
+  description?: string
   className?: string
 }
 

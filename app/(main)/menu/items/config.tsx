@@ -10,9 +10,6 @@ import { computeFinalPrice } from "@/lib/utils/pricing";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Route } from "next";
-// import { Category } from "@prisma/client";
-
-// ── Types ──────────────────────────────────────────
 
 export type Category = {
   id: string;
@@ -49,8 +46,6 @@ export type MenuItem = {
   }[];
 };
 
-// ── Schema ─────────────────────────────────────────
-
 export const menuItemSchema = z.object({
   name: z.string().min(1, "Item name is required").max(100),
   defaultPrice: z.coerce.number().min(0, "Price must be 0 or greater"),
@@ -65,8 +60,6 @@ export const menuItemSchema = z.object({
 
 export type MenuItemFormData = z.infer<typeof menuItemSchema>;
 
-// ── Default Values ─────────────────────────────────
-
 export const menuItemDefaultValues: MenuItemFormData = {
   name: "",
   defaultPrice: 0,
@@ -78,8 +71,6 @@ export const menuItemDefaultValues: MenuItemFormData = {
   isAvailable: true,
   imageUrls: [],
 };
-
-// ──Form Fields Config ──────────────────────────────────
 
 export const menuItemFields = (categories: Category[]): FieldConfig[] => [
   {
@@ -135,8 +126,6 @@ export const menuItemFields = (categories: Category[]): FieldConfig[] => [
     description: "Show new badge on this item",
   },
 ];
-
-// ── Table Columns ──────────────────────────────────
 
 export const menuItemColumns = (
   onEdit: (row: MenuItem) => void,

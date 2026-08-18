@@ -21,7 +21,6 @@ export function HeaderSkeleton() {
 export function OverviewSkeleton() {
   return (
     <div className="space-y-8">
-      {/* KPI strip */}
       <div className="border-y border-border">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -47,7 +46,6 @@ export function OverviewSkeleton() {
         </div>
       </div>
 
-      {/* Sales */}
       <SectionSkeleton>
         <div className="grid gap-5 xl:grid-cols-3">
           <ChartSkeleton className="xl:col-span-2" height={340} />
@@ -59,7 +57,6 @@ export function OverviewSkeleton() {
         </div>
       </SectionSkeleton>
 
-      {/* Customers */}
       <SectionSkeleton>
         <div className="grid gap-5 xl:grid-cols-2">
           <ChartSkeleton height={320} />

@@ -22,11 +22,9 @@ interface ModalProps {
   isEditing: boolean;
   size?: "sm" | "md" | "lg";
  
-  // form fields
   formId?: string;
   onSubmit?: () => void;
 
-  // make footer optional
   isFooter?: boolean;
 }
 
@@ -68,7 +66,6 @@ export function AppModal({
           )}
         </DialogHeader>
 
-        {/* if formId + onSubmit provided → wrap body in a form */}
         {formId && onSubmit ? (
           <form id={formId} onSubmit={onSubmit}>
             {children}

@@ -9,11 +9,9 @@ interface ImageUploadFieldProps {
   value: string[];
   onChange: (urls: string[]) => void;
   maxImages?: number;
-  multiple?: boolean; // false = single image only
-  aspect?: "square" | "video"; // defaults to "square"
-  /** Names what this uploader is for. Falls back to a generic "Image"/"Images". */
+  multiple?: boolean;
+  aspect?: "square" | "video";
   label?: string;
-  /** Helper line under the label — sizing guidance, where it gets used, etc. */
   hint?: string;
 }
 
@@ -38,7 +36,6 @@ export function ImageUploadField({
       <div className="space-y-1">
         <p className="text-sm font-medium text-title">
           {label ?? (multiple ? "Images" : "Image")}
-          {/* Only the unlabelled (generic) form inlines the count. */}
           {!label && multiple && (
             <span className="text-xs text-soft font-normal ml-1">
               (up to {effectiveMax}, first is main)
@@ -53,7 +50,7 @@ export function ImageUploadField({
           className={
             multiple
               ? "grid grid-cols-4 gap-2"
-              : "w-32" // single mode: one fixed-size tile, not a grid
+              : "w-32"
           }
         >
           {value.map((url, index) => (
@@ -97,7 +94,7 @@ export function ImageUploadField({
             onChange(
               multiple
                 ? [...value, ...newUrls].slice(0, effectiveMax)
-                : newUrls.slice(0, 1) // single mode: replace, don't append
+                : newUrls.slice(0, 1)
             );
           }}
           onUploadError={(error) => console.error("Upload error:", error)}

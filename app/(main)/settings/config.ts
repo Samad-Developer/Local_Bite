@@ -1,5 +1,3 @@
-
-// --- types ----------------------------------------------------
 export type RestaurantImage = {
   id: string;
   url: string;
@@ -10,10 +8,10 @@ export type RestaurantImage = {
 
 export type OperatingHours = {
   id: string;
-  day: number; // 0 for Sunday, 1 for Monday, etc.
+  day: number;
   isOpen: boolean;
-  openTime: string; // "HH:MM" format
-  closeTime: string; // "HH:MM" format
+  openTime: string;
+  closeTime: string;
   restaurantId: string;
 };
 
@@ -21,27 +19,27 @@ export type RestaurantSettingsType = {
   id: string;
   name: string;
   slug: string;
-  description: string | null; // Optional Prisma fields map to string | null
+  description: string | null;
   cuisineType: string;
   city: string;
   address: string | null;
   phone: string;
   logoUrl: string | null;
-  coverImages: RestaurantImage[]; // Kept relation type
+  coverImages: RestaurantImage[];
   operatingHours: OperatingHours[];
 
   isOpen: boolean;
   dineIn: boolean;
   takeaway: boolean;
   delivery: boolean;
-  deliveryFee: number; // Float maps to number
-  minimumOrder: number; // Float maps to number
-  estimatedTime: number; // Int maps to number
+  deliveryFee: number;
+  minimumOrder: number;
+  estimatedTime: number;
 
   acceptsCash: boolean;
   acceptsCard: boolean;
   acceptsOnline: boolean;
   
-  createdAt: Date; // DateTime maps to Date
+  createdAt: Date;
   updatedAt: Date;
 };

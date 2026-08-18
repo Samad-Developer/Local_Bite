@@ -12,16 +12,12 @@ interface UseCrudFormOptions<TRecord, TFormData extends FieldValues> {
 
   initialRecord?: TRecord;
 
-  // converts a table row into form values when editing
   toFormValues?: (record: TRecord) => TFormData;
 
-  // any custom action you want to perform after a successful create or update can be handled in the onSubmit function
   onSuccess?: () => void;
 
-  // gets the id from a record — used when calling updateAction
   getId: (record: TRecord) => string;
 
-  // server action for create and update
   createAction: (data: TFormData) => Promise<{ success?: boolean; error?: string; message?: string }>;
   updateAction: (data: TFormData & { id: string }) => Promise<{ success?: boolean; error?: string; message?: string }>;
 }

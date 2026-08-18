@@ -23,7 +23,7 @@ export async function getCashedRestaurant({
     where: { id: restaurantId },
     include: {
       operatingHours: {
-        orderBy: { day: "asc" }, // Monday first
+        orderBy: { day: "asc" },
       },
       coverImages: {
         orderBy: { sortOrder: "asc" },
@@ -43,7 +43,6 @@ export async function updateSettings(data: {
   const restaurantId = await getRestaurantId();
 
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    // first update the restarunt info
     await tx.restaurant.update({
       where: { id: restaurantId },
       data: {
@@ -55,12 +54,10 @@ export async function updateSettings(data: {
       },
     });
 
-    // first delet all images from data base
     await tx.restaurantImage.deleteMany({
       where: { restaurantId: restaurantId },
     });
 
-    // Recreate all images again
     await tx.restaurantImage.createMany({
       data: data.coverImages.map((coverImageUrl) => ({
         restaurantId: restaurantId,

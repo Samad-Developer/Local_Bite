@@ -10,7 +10,7 @@ const orderSchema = z.object({
   type: z.enum(["DINE_IN", "TAKEAWAY", "DELIVERY"]),
   paymentMethod: z.enum(["CASH", "CARD", "ONLINE"]),
   specialNotes: z.string().optional(),
-  deliveryAreaId: z.string().optional(),       // ← added
+  deliveryAreaId: z.string().optional(),
   items: z.array(z.object({
     menuItemId: z.string(),
     quantity: z.number().min(1),
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
           type: data.type,
           paymentMethod: data.paymentMethod,
           specialNotes: data.specialNotes,
-          deliveryAreaId: data.deliveryAreaId ?? null,   // ← added
+          deliveryAreaId: data.deliveryAreaId ?? null,
           subtotal: data.subtotal,
           deliveryFee: data.deliveryFee ?? 0,
           total: data.total,
@@ -63,7 +63,6 @@ export async function POST(request: Request) {
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             totalPrice: item.totalPrice,
-            // specialInstructions: item.specialInstructions,
           }
         })
 

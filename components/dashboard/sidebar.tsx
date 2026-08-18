@@ -38,8 +38,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
-// ─── Types ────────────────────────────────────────────
-
 type NavChild = {
   title: string;
   href: string;
@@ -58,8 +56,6 @@ type NavSection = {
   label: string;
   items: NavItem[];
 };
-
-// ─── Nav Config ───────────────────────────────────────
 
 const navSections: NavSection[] = [
   {
@@ -136,8 +132,6 @@ const navSections: NavSection[] = [
   },
 ];
 
-// ─── Role Badge ───────────────────────────────────────
-
 const roleBadge: Record<string, { label: string; color: string }> = {
   OWNER: {
     label: "Owner",
@@ -152,8 +146,6 @@ const roleBadge: Record<string, { label: string; color: string }> = {
     color: "bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0]",
   },
 };
-
-// ─── Collapsible Nav Item ─────────────────────────────
 
 function CollapsibleNavItem({
   item,
@@ -173,7 +165,6 @@ function CollapsibleNavItem({
       className="group/collapsible"
     >
       <SidebarMenuItem>
-        {/* Parent row — no navigation, just expands */}
         <div
           className={`flex items-center rounded-lg transition-all duration-150
           ${open || isMenuOpen ? "bg-[#fff7ed]" : "hover:bg-[#f9f9f9]"}
@@ -210,7 +201,6 @@ function CollapsibleNavItem({
           </CollapsibleTrigger>
         </div>
 
-        {/* Children */}
         <CollapsibleContent>
           <SidebarMenuSub className="ml-6 mt-0.5 border-l border-[#e5e7eb] pl-3 space-y-0.5">
             {item.children.map((child) => {
@@ -253,8 +243,6 @@ function CollapsibleNavItem({
   );
 }
 
-// ─── Main Sidebar Component ───────────────────────────
-
 interface AppSidebarProps {
   role: string;
   name: string;
@@ -272,7 +260,6 @@ export default function AppSidebar({ role, name, email }: AppSidebarProps) {
 
   return (
     <Sidebar>
-      {/* ── Header ── */}
       <SidebarHeader className="border-b border-[#e5e7eb] px-4 py-4">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-[#f97316] rounded-lg flex items-center justify-center shadow-sm shrink-0">
@@ -287,7 +274,6 @@ export default function AppSidebar({ role, name, email }: AppSidebarProps) {
         </div>
       </SidebarHeader>
 
-      {/* ── Content ── */}
       <SidebarContent className="px-2 py-3">
         {navSections.map((section) => {
           const visibleItems = section.items.filter((item) =>
@@ -354,7 +340,6 @@ export default function AppSidebar({ role, name, email }: AppSidebarProps) {
         })}
       </SidebarContent>
 
-      {/* ── Footer ── */}
       <SidebarFooter className="border-t border-[#e5e7eb] p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 rounded-full bg-[#f97316] flex items-center justify-center shrink-0 shadow-sm">

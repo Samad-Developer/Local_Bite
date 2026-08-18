@@ -13,8 +13,6 @@ import { cn } from "@/lib/utils";
 import { SettingsSection } from "./SettingsSection";
 import { SettingsSubmitButton } from "./SettingsSubmitButton";
 
-// ── Schema ─────────────────────────────────────────
-
 const daySchema = z.object({
   day: z.number(),
   isOpen: z.boolean(),
@@ -28,9 +26,6 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-// ── Day names ──────────────────────────────────────
-// OperatingHours stores Monday as day 0.
-
 const dayNames = [
   "Monday",
   "Tuesday",
@@ -41,13 +36,7 @@ const dayNames = [
   "Sunday",
 ];
 
-// A native time input renders "09:00 AM" plus its own picker icon, so it
-// needs real room. shrink-0 matters just as much as the width: Input's base
-// class sets min-w-0, which lets the flex row squeeze the control until the
-// meridiem is clipped off.
 const TIME_INPUT_CLASS = "w-40 shrink-0 tabular-nums";
-
-// ── Component ──────────────────────────────────────
 
 export default function OperatingHoursForm({
   operatingHours,
@@ -66,19 +55,14 @@ export default function OperatingHoursForm({
     },
   });
 
-  // this gives us the fields array to loop over
   const { fields } = useFieldArray({
     control: form.control,
     name: "hours",
   });
 
-  // One subscription for the whole array rather than one per row — the
-  // rows only need to know whether their own day is open.
   const hours = form.watch("hours");
   const openCount = hours?.filter((h) => h?.isOpen).length ?? 0;
 
-  // Resolved after mount: computing "today" during render would risk a
-  // hydration mismatch across a midnight boundary.
   const [todayIndex, setTodayIndex] = useState<number | null>(null);
   useEffect(() => {
     setTodayIndex((new Date().getDay() + 6) % 7);
@@ -90,13 +74,11 @@ export default function OperatingHoursForm({
 
       if (response?.success) {
         toast.success(response.message ?? "Hours updated successfully.");
-        // update the form state to match the saved values
         form.reset(data);
       } else {
         toast.error(response?.message ?? "Failed to update hours.");
       }
     } catch (error) {
-      // log and show a generic error message for unexpected failures
       console.error("Failed to update hours", error);
       toast.error("An unexpected error occurred. Please try again.");
     }
@@ -128,7 +110,6 @@ export default function OperatingHoursForm({
                 isToday && "bg-brand-subtle/60",
               )}
             >
-              {/* Day name — static, from dayNames array */}
               <div className="flex items-center gap-2 w-36 shrink-0">
                 <span
                   className={cn(
@@ -145,7 +126,6 @@ export default function OperatingHoursForm({
                 )}
               </div>
 
-              {/* isOpen toggle */}
               <Controller
                 name={`hours.${index}.isOpen`}
                 control={form.control}
@@ -163,8 +143,6 @@ export default function OperatingHoursForm({
                 {isOpen ? "Open" : "Closed"}
               </span>
 
-              {/* Times stay mounted when closed so the values survive a
-                  toggle — they are only disabled and dimmed. */}
               <div
                 className={cn(
                   "flex items-center gap-2 ml-auto transition-opacity duration-150",

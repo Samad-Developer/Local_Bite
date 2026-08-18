@@ -5,8 +5,6 @@ import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
 import { getRestaurantId } from "@/lib/utils/auth-utils"
 
-// ── Get all areas ──────────────────────────────────
-
 export async function getDeliveryAreas() {
   const restaurantId = await getRestaurantId()
 
@@ -15,8 +13,6 @@ export async function getDeliveryAreas() {
     orderBy: { sortOrder: "asc" },
   })
 }
-
-// ── Create area ────────────────────────────────────
 
 export async function createDeliveryArea(data: {
   name: string
@@ -44,8 +40,6 @@ export async function createDeliveryArea(data: {
   return { success: true, message: "Delivery area created successfully" }
 }
 
-// ── Update area ────────────────────────────────────
-
 export async function updateDeliveryArea(
   data: {
     name: string
@@ -65,8 +59,6 @@ export async function updateDeliveryArea(
   revalidatePath("/settings")
   return { success: true, message: "Delivery area updated successfully" }
 }
-
-// ── Delete area ────────────────────────────────────
 
 export async function deleteDeliveryArea(id: string) {
   await prisma.deliveryArea.delete({ where: { id } })

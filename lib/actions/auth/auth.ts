@@ -6,7 +6,6 @@ import bcrypt from "bcryptjs"
 import { LoginSchema, SignupFormSchema } from "../../validations/auth";
 import { Prisma } from "@prisma/client";
 
-// REGISTER
 export async function registerOwner(
   prevState: { error?: string; success?: boolean } | null,
   formData: FormData
@@ -19,10 +18,8 @@ export async function registerOwner(
     restaurantName: formData.get("restaurantName")
   }
 
-  // Validate form fields
   const validatedFields = SignupFormSchema.safeParse(rawData);
 
-  // If validation fails, return errors
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
@@ -31,7 +28,6 @@ export async function registerOwner(
   
   const { name, email, password, restaurantName } = validatedFields.data
 
-  // check email already exists
   const existingUser = await prisma.user.findUnique({
     where: { email },
   })
@@ -40,13 +36,11 @@ export async function registerOwner(
     return { error: "Email already registered" }
   }
 
-  // create slug from restaurant name
   const slug = restaurantName
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "")
 
-  // check slug unique
   const existingRestaurant = await prisma.restaurant.findUnique({
     where: { slug },
   })
@@ -55,10 +49,8 @@ export async function registerOwner(
     return { error: "Restaurant name already taken" }
   }
 
-  // hash password
   const hashedPassword = await bcrypt.hash(password, 10)
 
-  // create restaurant + owner + operating hours together
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const restaurant = await tx.restaurant.create({
       data: {
@@ -94,7 +86,6 @@ export async function registerOwner(
   return { success: true }
 }
 
-// LOGIN
 export async function loginUser(
   prevState: { error?: string } | null | undefined,
   formData: FormData

@@ -39,7 +39,6 @@ export default function AppDrawer({
   return (
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent side={side}>
-        {/* Header */}
         <SheetHeader className="px-6 py-4 border-b border-[#f3f4f6]">
           <SheetTitle className="text-lg font-semibold text-[#111111]">
             {title}
@@ -51,7 +50,6 @@ export default function AppDrawer({
           )}
         </SheetHeader>
 
-        {/* if formId + onSubmit provided → wrap body in a form */}
         {formId && onSubmit ? (
           <form id={formId} onSubmit={onSubmit}>
             <div className="px-4">

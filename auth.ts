@@ -9,8 +9,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
-    // one day max age
-    maxAge: 2592000 // 30 days,
+    maxAge: 2592000
   },
   pages: {
     signIn: "/login",
@@ -24,23 +23,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
 
-        // 1. validate credentials exist
         const { email, password } = await LoginSchema.parseAsync(credentials);
 
-        // 2. find user in YOUR database
         const user = await prisma.user.findUnique({
           where: { email: email },
         })
 
         if (!user) return null
 
-        // 3. compare password with bcrypt
         const passwordMatch = await bcrypt.compare(
           password,
           user.password
         )
 
-        // 4. return user object or null
         if (!passwordMatch) return null
 
         return {

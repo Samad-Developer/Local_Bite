@@ -26,45 +26,20 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-// ─────────────────────────────────────────────────────────────
-// Props
-// ─────────────────────────────────────────────────────────────
 interface DataTableProps<TData, TValue> {
-  // Core — required
   columns: ColumnDef<TData, TValue>[]
   data:    TData[]
 
-  // Search — optional
-  // Pass the accessorKey of the column you want to filter by
-  // e.g. searchKey="name" will filter the name column
   searchKey?:         string
   searchPlaceholder?: string
 
-  // Loading state
   loading?: boolean
 
-  // Pagination
-  pageSize?: number          // default 10
+  pageSize?: number
+
+  toolbar?: React.ReactNode
 }
 
-// ─────────────────────────────────────────────────────────────
-// DataTable
-//
-// Reusable shell. Write once, use on every page.
-// Powered by TanStack Table — sorting, filtering, pagination
-// all built in. You never configure this again.
-//
-// The only thing that changes per page is:
-//   - columns  (what columns to show and how to render them)
-//   - data     (the rows)
-//
-// Usage:
-//   <DataTable
-//     columns={categoryColumns}
-//     data={categories}
-//     searchKey="name"
-//   />
-// ─────────────────────────────────────────────────────────────
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -72,6 +47,7 @@ export function DataTable<TData, TValue>({
   searchPlaceholder,
   loading = false,
   pageSize = 8,
+  toolbar,
 }: DataTableProps<TData, TValue>) {
 
   const [sorting,          setSorting]          = React.useState<SortingState>([])
@@ -81,17 +57,13 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
-    // ── Row models ──────────────────────────────────────────
-    // Each model is a plugin. Only add what you need.
     getCoreRowModel:       getCoreRowModel(),
     getSortedRowModel:     getSortedRowModel(),
     getFilteredRowModel:   getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    // ── State handlers ──────────────────────────────────────
     onSortingChange:          setSorting,
     onColumnFiltersChange:    setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    // ── Initial config ──────────────────────────────────────
     initialState: {
       pagination: { pageSize },
     },
@@ -102,7 +74,6 @@ export function DataTable<TData, TValue>({
     },
   })
 
-  // ── Derived values ────────────────────────────────────────
   const currentPage  = table.getState().pagination.pageIndex + 1
   const totalPages   = table.getPageCount()
   const filteredRows = table.getFilteredRowModel().rows.length
@@ -112,45 +83,45 @@ export function DataTable<TData, TValue>({
   return (
     <div className="flex flex-col gap-4">
 
-      {/* ── Toolbar ─────────────────────────────────────── */}
-      {searchKey && (
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              placeholder={searchPlaceholder ?? `Search...`}
-              value={
-                (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
-              }
-              onChange={(e) =>
-                table.getColumn(searchKey)?.setFilterValue(e.target.value)
-              }
-              className="pl-9 pr-9"
-            />
-            {/* Clear search button */}
-            {isFiltered && (
-              <button
-                onClick={() => table.getColumn(searchKey)?.setFilterValue("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
+      {(searchKey || toolbar) && (
+        <div className="flex flex-wrap items-center gap-3">
+          {searchKey && (
+            <div className="relative flex-1 min-w-[12rem] max-w-sm">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                placeholder={searchPlaceholder ?? `Search...`}
+                value={
+                  (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
+                }
+                onChange={(e) =>
+                  table.getColumn(searchKey)?.setFilterValue(e.target.value)
+                }
+                className="pl-9 pr-9"
+              />
+              {isFiltered && (
+                <button
+                  onClick={() => table.getColumn(searchKey)?.setFilterValue("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          )}
 
-          {/* Filtered result count */}
           {isFiltered && (
             <span className="text-sm text-muted-foreground">
               {filteredRows} of {totalRows} results
             </span>
           )}
+
+          {toolbar && <div className="ml-auto">{toolbar}</div>}
         </div>
       )}
 
-      {/* ── Table ───────────────────────────────────────── */}
       <div className="overflow-hidden rounded-md border">
         <Table>
 
@@ -175,7 +146,6 @@ export function DataTable<TData, TValue>({
           </TableHeader>
 
           <TableBody>
-            {/* Loading state */}
             {loading ? (
               <TableRow>
                 <TableCell
@@ -187,7 +157,6 @@ export function DataTable<TData, TValue>({
               </TableRow>
 
             ) : table.getRowModel().rows.length === 0 ? (
-              // Empty state
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
@@ -198,7 +167,6 @@ export function DataTable<TData, TValue>({
               </TableRow>
 
             ) : (
-              // Data rows
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -220,7 +188,6 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* ── Pagination ──────────────────────────────────── */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">

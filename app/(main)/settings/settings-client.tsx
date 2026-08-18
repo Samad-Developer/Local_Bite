@@ -32,7 +32,6 @@ export default function SettingsClient({
         onButtonClick={() => {}}
       />
 
-      {/* Tabs */}
       <div className="flex gap-2 border-b border-[#e5e7eb] pb-0">
         {tabs.map((tab) => (
           <button
@@ -51,7 +50,6 @@ export default function SettingsClient({
         ))}
       </div>
 
-      {/* Tab Content */}
       <div>
         {activeTab === "info" && (
           <RestaurantInfoForm restaurant={restaurant} />

@@ -8,7 +8,6 @@ interface deleteOptions<TRecord> {
     deleteAction: ( id: string ) => Promise<{ success?: boolean; error?: string; message?: string }>;
 }
 
-// it will get delete action and may delete target type
 export function useDelete<TRecord>({
   deleteAction,
   getId,

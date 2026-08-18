@@ -10,8 +10,6 @@ import { SettingsSubmitButton } from "./SettingsSubmitButton";
 import { toast } from "sonner";
 import { updatePaymentModes } from "@/lib/actions/restaurant/settings";
 
-//  ----- Schema ----------------------
-
 const paymentModeSchema = z.object({
   acceptsCash: z.boolean(),
   acceptsCard: z.boolean(),
@@ -19,8 +17,6 @@ const paymentModeSchema = z.object({
 });
 
 type paymentModesFormValues = z.infer<typeof paymentModeSchema>;
-
-// ------ Form fields -----------------------
 
 const paymentModesFormFields: FieldConfig[] = [
   {
@@ -42,8 +38,6 @@ const paymentModesFormFields: FieldConfig[] = [
     description: "Customers transfer the total before the order is confirmed.",
   },
 ];
-
-//  -----------------------------------------------------
 
 const PaymentModesForm = ({
   restaurant,
@@ -95,9 +89,6 @@ const PaymentModesForm = ({
           </span>
         }
       >
-        {/* Row styling comes from the wrapper: FormRenderer renders one
-            [data-slot=field] per entry, so the divider and padding can be
-            applied without the renderer knowing anything about it. */}
         <FormRenderer
           fields={paymentModesFormFields}
           control={form.control as Control<any>}

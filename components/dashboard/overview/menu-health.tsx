@@ -7,7 +7,6 @@ import { formatNumber } from "@/lib/utils/format"
 import type { MenuPerformance } from "@/types/dashboard.types"
 
 export default function MenuHealth({ data }: { data: MenuPerformance }) {
-  // Only numbers that need action carry colour; healthy counts stay neutral.
   const tiles = [
     {
       label: "Live items",
@@ -43,8 +42,6 @@ export default function MenuHealth({ data }: { data: MenuPerformance }) {
         action={<CardLink href={"/menu/items" as Route}>Fix items</CardLink>}
       />
 
-      {/* Hairlines are placed per cell: a grid `divide-x` would draw a rule
-          down the left edge of the second row at the 2-column breakpoint. */}
       <div className="grid grid-cols-2 sm:grid-cols-4">
         {tiles.map((tile, i) => (
           <div

@@ -26,7 +26,6 @@ export default async function DashboardHeader({
 }) {
   const restaurant = await getRestaurant()
 
-  // OperatingHours stores Monday as day 0; JS getDay() starts on Sunday.
   const todayIndex = (new Date().getDay() + 6) % 7
   const today = restaurant?.operatingHours.find((h) => h.day === todayIndex)
 
@@ -64,7 +63,6 @@ export default async function DashboardHeader({
             Dashboard
           </h1>
 
-          {/* One quiet line carries identity, status, hours and channels. */}
           <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-soft mt-2">
             <span className="text-label font-medium">
               {restaurant?.name ?? "Your restaurant"}

@@ -15,14 +15,6 @@ import {
 import { FieldConfig } from "./field-config.types";
 import React from "react";
 
-// ─────────────────────────────────────────────────────────────
-// MultiSelectField
-//
-// Wraps the Combobox (multiple mode) for use inside FormRenderer.
-// Needs to be its own component because useComboboxAnchor is a
-// hook and can't run conditionally inside the Controller's
-// render callback.
-// ─────────────────────────────────────────────────────────────
 export default function MultiSelectField({
   field,
   config,
@@ -76,6 +68,3 @@ export default function MultiSelectField({
     </Combobox>
   )
 }
-
-
-

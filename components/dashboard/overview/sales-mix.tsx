@@ -36,8 +36,6 @@ export default function SalesMix({ slices }: { slices: BreakdownSlice[] }) {
             total={total}
             active={active}
             onActiveChange={setActive}
-            // The centre follows the hover so the reader never has to hold a
-            // colour in their head while looking down at the legend.
             centerValue={
               shown ? formatCurrency(shown.revenue) : formatCurrency(total)
             }
@@ -83,8 +81,6 @@ export default function SalesMix({ slices }: { slices: BreakdownSlice[] }) {
                         {formatCurrency(slice.revenue / Math.max(1, slice.orders))}
                       </p>
                     </div>
-                    {/* Direct value labels are the relief channel that lets
-                        slot 1 sit below the 3:1 mark contrast floor. */}
                     <div className="text-right shrink-0">
                       <p className="text-sm font-medium text-title tabular-nums">
                         {formatCurrency(slice.revenue)}
@@ -103,8 +99,6 @@ export default function SalesMix({ slices }: { slices: BreakdownSlice[] }) {
     </DashCard>
   )
 }
-
-// ─── Donut ────────────────────────────────────────────
 
 const RADIUS = 54
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
@@ -127,13 +121,10 @@ export function Donut({
   active?: string | null
   onActiveChange?: (key: string | null) => void
 }) {
-  // Pre-compute each arc's length and starting offset so the render stays pure.
   const arcs = slices.reduce<
     { slice: BreakdownSlice; length: number; offset: number }[]
   >((acc, slice) => {
     const fraction = total > 0 ? slice.revenue / total : 0
-    // A 2px surface gap separates touching arcs — the spacer, not a stroke,
-    // is what keeps neighbouring segments distinct.
     const length = Math.max(0, fraction * CIRCUMFERENCE - 2)
     const offset = acc.length
       ? acc[acc.length - 1].offset + (acc[acc.length - 1].length + 2)
@@ -172,10 +163,6 @@ export function Donut({
               fill="none"
               stroke={color}
               strokeWidth={isActive ? STROKE + 4 : STROKE}
-              // Full length is the rendered default, so the ring is correct
-              // in the SSR markup and stays correct if JS never arrives. The
-              // sweep is a pure CSS keyframe layered on top — it needs no
-              // hydration and cannot leave the arc stuck at zero.
               strokeDasharray={`${length} ${CIRCUMFERENCE}`}
               strokeDashoffset={-offset}
               strokeLinecap="butt"
@@ -185,7 +172,6 @@ export function Donut({
               style={{
                 ["--arc-len" as string]: `${length}px`,
                 ["--arc-gap" as string]: `${CIRCUMFERENCE}px`,
-                // Stagger so the ring assembles segment by segment.
                 ["--arc-delay" as string]: `${i * 110}ms`,
               }}
             />
@@ -194,8 +180,6 @@ export function Donut({
       </svg>
 
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-9 pointer-events-none">
-        {/* Proportional figures: tabular-nums makes a display-size number
-            look loose. */}
         <span className="text-[17px] font-semibold text-title leading-tight">
           {centerValue}
         </span>

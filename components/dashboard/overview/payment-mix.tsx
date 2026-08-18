@@ -41,9 +41,6 @@ export default function PaymentMix({
         />
       ) : (
         <div className="p-5 space-y-6">
-          {/* ── Collected vs outstanding ── */}
-          {/* Money in vs money owed genuinely means good/bad, so this one
-              meter wears status tokens rather than categorical slots. */}
           <div>
             <div className="flex items-baseline justify-between mb-3">
               <span className="text-[28px] font-semibold text-title tracking-tight leading-none">
@@ -89,7 +86,6 @@ export default function PaymentMix({
             </div>
           </div>
 
-          {/* ── Method split ── */}
           <div className="pt-5 border-t border-border space-y-4">
             <MicroLabel>By method</MicroLabel>
 

@@ -47,24 +47,18 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* My Custom Properties */
-
-  /* Backgrounds */
   --color-page: var(--page);
   --color-surface: var(--surface);
   --color-elevated: var(--elevated);
 
-  /* Borders */
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
 
-  /* Brand */
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
   --color-brand-subtle: var(--brand-subtle);
   --color-brand-border: var(--brand-border);
 
-  /* Text */
   --color-title: var(--title);
   --color-heading: var(--heading);
   --color-label: var(--label);
@@ -106,31 +100,23 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 
-  /* My Colors Palette */
-
-  /* Backgrounds */
   --page: #f5f5f5;
   --surface: #ffffff;
   --elevated: #f9f9f9;
 
-  /* Borders */
   --border: #e5e7eb;
   --border-hover: #d1d5db;
 
-  /* Brand */
   --brand: #f97316;
   --brand-hover: #ea6c0a;
   --brand-subtle: #fff7ed;
   --brand-border: #fed7aa;
 
-  /* Text — contrast ratios are against --surface (#ffffff).
-     Anything below 4.5:1 is not legible as body copy, which is why
-     --muted is reserved for non-text use only. */
-  --title: #111111;   /* headings, figures      19.0:1 */
+  --title: #111111;
   --heading: #111111;
-  --label: #4b5563;   /* subtitles, axis labels  7.6:1 */
-  --soft: #6b7280;    /* meta, footnotes         4.8:1 */
-  --muted: #9ca3af;   /* NOT for text — shadcn's bg-muted reads this */
+  --label: #4b5563;
+  --soft: #6b7280;
+  --muted: #9ca3af;
 }
 
 .dark {
@@ -200,12 +186,6 @@
   animation: bounce-in 0.35s ease-out;
 }
 
-/* ─── Dashboard chart entrances ───────────────────────
-   Each mark grows from its own baseline, so the chart assembles the way
-   the data reads: bars from the left, columns from the floor, lines drawn
-   head to tail. Every one of these is switched off under
-   prefers-reduced-motion at the bottom of this block. */
-
 @keyframes grow-bar {
   from {
     transform: scaleX(0);
@@ -252,8 +232,6 @@
   animation: grow-column 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Pair with style={{ "--draw-length": <path length> }} and a matching
-   stroke-dasharray, or the line will simply appear. */
 .animate-draw-line {
   stroke-dashoffset: var(--draw-length);
   animation: draw-line 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -263,9 +241,6 @@
   animation: fade-rise 0.5s ease-out both;
 }
 
-/* Donut segments sweep out from zero length, staggered by --arc-delay.
-   The element already carries its full stroke-dasharray, so if this
-   animation never runs the ring is simply drawn complete. */
 @keyframes donut-sweep {
   from {
     stroke-dasharray: 0 var(--arc-gap);
@@ -293,14 +268,10 @@
     animation: none;
   }
 
-  /* The line is dash-offset by default, so cancelling the animation alone
-     would leave it invisible. */
   .animate-draw-line {
     stroke-dashoffset: 0;
   }
 
-  /* Arcs still reach full length — they just snap there, because the
-     full stroke-dasharray is on the element itself. */
   .donut-arc {
     animation: none;
     transition: none;

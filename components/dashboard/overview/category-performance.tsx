@@ -29,8 +29,6 @@ export default function CategoryPerformance({
         />
       ) : (
         <div className="p-5 space-y-5">
-          {/* One series, one colour. Bar length already ranks these — fading
-              the hue down the list would re-encode the same thing twice. */}
           {visible.map((category, i) => (
             <div key={category.key} style={{ animationDelay: `${i * 60}ms` }}>
               <div className="flex items-center justify-between gap-3 mb-2">

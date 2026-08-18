@@ -75,7 +75,6 @@ export default function CategoriesClient({ categories }: {
         searchPlaceholder="Search categories..."
       />
 
-      {/* Create / Edit Form Modal */}
       <AppModal
         open={modalOpen}
         onClose={handleClose}
@@ -92,7 +91,6 @@ export default function CategoriesClient({ categories }: {
         />
       </AppModal>
 
-      {/* Delete Confirmation Modal */}
       <DeleteModal
         open={deleteTarget !== null}
         onClose={closeDeleteModal}

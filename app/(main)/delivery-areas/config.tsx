@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, MapPin } from "lucide-react"
 import { FieldConfig } from "@/components/shared/form/field-config.types"
 
-// ── Type ───────────────────────────────────────────
-
 export type DeliveryArea = {
   id: string
   name: string
@@ -17,8 +15,6 @@ export type DeliveryArea = {
   updatedAt: Date
 }
 
-// ── Schema ─────────────────────────────────────────
-
 export const deliveryAreaSchema = z.object({
   name: z.string().min(1, "Area name is required").max(50),
   deliveryFee: z.coerce.number().min(0, "Delivery fee cannot be negative"),
@@ -27,15 +23,11 @@ export const deliveryAreaSchema = z.object({
 
 export type DeliveryAreaFormData = z.infer<typeof deliveryAreaSchema>
 
-// ── Default values ─────────────────────────────────
-
 export const deliveryAreaDefaultValues: DeliveryAreaFormData = {
   name: "",
   deliveryFee: 0,
   isActive: true,
 }
-
-// ── Fields ─────────────────────────────────────────
 
 export const deliveryAreaFields: FieldConfig[] = [
   {
@@ -57,8 +49,6 @@ export const deliveryAreaFields: FieldConfig[] = [
     description: "Disable to temporarily stop delivery to this area",
   },
 ]
-
-// ── Columns ────────────────────────────────────────
 
 export const deliveryAreaColumns = (
   onEdit: (row: DeliveryArea) => void,

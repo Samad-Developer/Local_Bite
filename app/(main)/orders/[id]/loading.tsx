@@ -3,7 +3,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 const BLOCK = "bg-[#f1f2f4]"
 const CARD = "bg-surface border border-border rounded-xl"
 
-// Mirrors the real layout so the page doesn't jump when data lands.
 export default function Loading() {
   return (
     <div className="max-w-5xl space-y-6 pb-8">

@@ -51,7 +51,6 @@ export default function RevenueChart({
 
   const max = Math.max(...values, 0)
 
-  // The axis has to clear both series, or the comparison line gets clipped.
   const ceiling = niceCeiling(showPrev ? Math.max(max, ...prevValues) : max)
 
   const toY = (value: number) => 100 - (ceiling ? (value / ceiling) * 92 : 0)
@@ -104,11 +103,8 @@ export default function RevenueChart({
         />
       ) : (
         <div className="p-5">
-          {/* ── Summary row ── */}
           <div className="flex items-end justify-between gap-4 mb-5">
             <div>
-              {/* Proportional figures — tabular-nums makes a display-size
-                  number look loose. */}
               <p className="text-[30px] font-semibold text-title tracking-tight leading-none">
                 {metric === "revenue" ? formatCurrency(total) : formatNumber(total)}
               </p>
@@ -167,13 +163,11 @@ export default function RevenueChart({
             )}
           </div>
 
-          {/* ── Plot area ── */}
           <div className="relative" style={{ height: CHART_HEIGHT }}>
             {ticks.map((t) => (
               <div
                 key={t}
                 className="absolute left-0 right-0 flex items-center -translate-y-1/2"
-                // Matches toY() so the grid line sits exactly on its value.
                 style={{ top: `${100 - t * 92}%` }}
               >
                 <span className="w-14 pr-3 text-right text-[10px] text-soft tabular-nums shrink-0">
@@ -216,8 +210,6 @@ export default function RevenueChart({
                   style={{ animationDelay: "260ms" }}
                 />
 
-                {/* Previous period sits behind, dashed and neutral, so it
-                    reads as a reference rather than a second headline. */}
                 {showPrev && (
                   <path
                     d={prevPath}
@@ -232,8 +224,6 @@ export default function RevenueChart({
                   />
                 )}
 
-                {/* pathLength normalises the dash maths to 0–1, so the
-                    draw-in works despite the non-uniform viewBox scaling. */}
                 <path
                   key={`${metric}-${data.length}`}
                   d={linePath}
@@ -320,7 +310,6 @@ export default function RevenueChart({
             </div>
           </div>
 
-          {/* ── X axis ── */}
           <div className="relative h-4 ml-14 mt-3">
             {data.map((point, i) => {
               if (!labelVisible(i, data.length)) return null
@@ -391,7 +380,6 @@ function pathFor(
     .join(" ")
 }
 
-/** Keep roughly 8 x-axis labels regardless of bucket count. */
 function labelVisible(index: number, total: number) {
   const step = Math.max(1, Math.ceil(total / 8))
   return index % step === 0 || index === total - 1

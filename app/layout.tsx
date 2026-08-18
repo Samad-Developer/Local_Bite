@@ -10,7 +10,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { auth } from "@/auth";
 import { OrderNotificationProvider } from "@/components/providers/order-notification-provider";
 import { OrderBuzzer } from "@/components/providers/order-buzzer";
-// import { connection } from "next/server";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -29,7 +28,6 @@ async function SessionAwareContent({
 }: {
   children: React.ReactNode;
 }) {
-  // await connection();
   const session = await auth();
 
   return session?.user?.restaurantId ? (
@@ -60,9 +58,6 @@ export default async function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col overflow-hidden h-screen">
-        {/* <Suspense fallback={null}>
-          <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
-        </Suspense> */}
 
         <main className="flex-1 overflow-y-auto bg-[#f5f5f5]">
           <Suspense fallback={<>{children}</>}>

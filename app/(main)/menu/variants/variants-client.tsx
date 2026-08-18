@@ -41,7 +41,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
   const [isPending, startTransition] = useTransition();
 
 
-  // sync when menuItems prop changes (after save revalidation)
   useEffect(() => {
     setLocalItems(menuItems);
     setHasChanges(false);
@@ -52,8 +51,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
     item.name.toLowerCase().includes(search.toLowerCase()),
   );
 
-  // ── Local mutation helpers ───────────────────────
-
   type updateFunction = (item: MenuItemWithVariants) => MenuItemWithVariants;
 
   function updateLocalItem(updater: updateFunction) {
@@ -63,15 +60,12 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
     setHasChanges(true);
   }
 
-  // ── Variant mutations ────────────────────────────
-
   function handleVariantSave(
     data: Omit<LocalVariant, "addonGroups" | "deleted">,
   ) {
     updateLocalItem((item) => {
       const exists = item.variants.find((v) => v.id === data.id);
       if (exists) {
-        // update existing
         return {
           ...item,
           variants: item.variants.map((v) =>
@@ -79,7 +73,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
           ),
         };
       }
-      // add new
       return {
         ...item,
         variants: [...item.variants, { ...data, addonGroups: [] }],
@@ -96,8 +89,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
     }));
     setDeleteTarget(null);
   }
-
-  // ── AddonGroup mutations ─────────────────────────
 
   function handleGroupSave(data: Omit<LocalAddonGroup, "addons" | "deleted">) {
     updateLocalItem((item) => ({
@@ -137,8 +128,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
     }));
     setDeleteTarget(null);
   }
-
-  // ── Addon mutations ──────────────────────────────
 
   function handleAddonSave(
     variantId: string,
@@ -200,8 +189,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
     setDeleteTarget(null);
   }
 
-  // ── Save all changes ─────────────────────────────
-
   function handleSaveAll() {
     if (!selectedItem) return;
     startTransition(async () => {
@@ -219,14 +206,10 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
     });
   }
 
-  // ── Discard changes ──────────────────────────────
-
   function handleDiscard() {
     setLocalItems(menuItems);
     setHasChanges(false);
   }
-
-  // ── Delete confirmation ──────────────────────────
 
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
@@ -243,8 +226,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
     }
   }
 
-  // ── Modal title ──────────────────────────────────
-
   function getModalTitle() {
     if (!modal) return "";
     const titles: Record<string, string> = {
@@ -257,8 +238,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
     };
     return titles[modal.type] ?? "";
   }
-
-  // ── Modal content ────────────────────────────────
 
   function renderModalContent() {
     if (!modal || !selectedItem) return null;
@@ -339,7 +318,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
 
       <div className="flex gap-0 border border-[#e5e7eb] rounded-xl overflow-hidden bg-white flex-1 min-h-150">
 
-        {/* ── Left Panel ── */}
         <div className="w-60 border-r border-[#e5e7eb] flex flex-col shrink-0">
           <div className="p-3 border-b border-[#e5e7eb]">
             <p className="text-sm font-medium text-[#111111]">Menu Items</p>
@@ -407,7 +385,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
           </div>
         </div>
 
-        {/* ── Right Panel ── */}
         <div className="flex-1 flex flex-col overflow-hidden bg-[#f9fafb]">
 
           {!selectedItem ? (
@@ -418,7 +395,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
             </div>
           ) : (
             <>
-              {/* Right header */}
               <div className="px-5 py-3 border-b border-[#e5e7eb] bg-white flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-[#111111]">
@@ -469,7 +445,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
                 </div>
               </div>
 
-              {/* Variants list */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {activeVariants.length === 0 && (
                   <div className="text-center py-10">
@@ -487,7 +462,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
                       key={variant.id}
                       className="bg-white border border-[#e5e7eb] rounded-xl overflow-hidden"
                     >
-                      {/* Variant header */}
                       <div className="flex items-center gap-2.5 px-4 py-3 border-b border-[#f3f4f6]">
                         <span className="text-sm font-medium text-[#111111] flex-1">
                           {variant.name}
@@ -538,7 +512,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
                         </div>
                       </div>
 
-                      {/* Addon groups */}
                       <div className="px-4 py-3 bg-[#fafafa]">
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-xs font-semibold uppercase tracking-wider text-[#9ca3af]">
@@ -574,7 +547,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
                                 key={group.id}
                                 className="bg-white border border-[#e5e7eb] rounded-lg overflow-hidden"
                               >
-                                {/* Group header */}
                                 <div className="flex items-center gap-2 px-3 py-2 border-b border-[#f3f4f6]">
                                   <span className="text-xs font-medium text-[#111111] flex-1">
                                     {group.name}
@@ -630,7 +602,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
                                   </div>
                                 </div>
 
-                                {/* Addons */}
                                 <div>
                                   {activeAddons.map((addon) => (
                                     <div
@@ -713,7 +684,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
         </div>
       </div>
 
-      {/* Create / Edit Modal */}
       <AppModal
         open={modal !== null}
         onClose={() => setModal(null)}
@@ -726,7 +696,6 @@ export default function VariantsClient({ menuItems }: { menuItems: MenuItemWithV
         {renderModalContent()}
       </AppModal>
 
-      {/* Delete confirmation */}
       <DeleteModal
         open={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}

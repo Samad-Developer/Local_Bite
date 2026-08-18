@@ -23,8 +23,6 @@ import type {
   TrendPoint,
 } from "@/types/dashboard.types"
 
-// ─── Constants ────────────────────────────────────────
-
 const ORDER_TYPE_LABELS: Record<string, string> = {
   DINE_IN: "Dine In",
   TAKEAWAY: "Takeaway",
@@ -36,8 +34,6 @@ const PAYMENT_LABELS: Record<string, string> = {
   CARD: "Card",
   ONLINE: "Online",
 }
-
-// ─── Range helpers ────────────────────────────────────
 
 type ResolvedRange = {
   start: Date
@@ -56,8 +52,6 @@ function resolveRange(range: RangeKey): ResolvedRange {
   const days = range === "today" ? 1 : range === "7d" ? 7 : range === "30d" ? 30 : 90
   const start = range === "today" ? startOfDay(end) : startOfDay(subDays(end, days - 1))
 
-  // Elapsed-matched comparison window so "today at 11am" is compared
-  // against "yesterday until 11am", not against a full day.
   const windowMs = end.getTime() - start.getTime()
   const prevEnd = subMilliseconds(start, 1)
   const prevStart = subMilliseconds(prevEnd, windowMs)
@@ -92,10 +86,6 @@ function hourLabel(hour: number) {
   const h = hour % 12 === 0 ? 12 : hour % 12
   return `${h} ${suffix}`
 }
-
-// ─── Overview ─────────────────────────────────────────
-// One pass over the orders in the current + previous window powers every
-// headline number, the trend chart, the hour-of-day profile and all the splits.
 
 export async function getDashboardOverview(range: RangeKey): Promise<OverviewData | null> {
   const session = await auth()
@@ -147,7 +137,6 @@ export async function getDashboardOverview(range: RangeKey): Promise<OverviewDat
   const current = rows.filter((o) => o.createdAt >= r.start)
   const previous = rows.filter((o) => o.createdAt <= r.prevEnd && o.createdAt >= r.prevStart)
 
-  // Cancelled orders are excluded from revenue but tracked separately.
   const live = current.filter((o) => o.status !== "CANCELLED")
   const prevLive = previous.filter((o) => o.status !== "CANCELLED")
 
@@ -164,7 +153,6 @@ export async function getDashboardOverview(range: RangeKey): Promise<OverviewDat
     ? (prevCancelled.length / previous.length) * 100
     : 0
 
-  // ── Money movement ──
   const paid = live.filter((o) => o.paymentStatus === "PAID")
   const collected = sum(paid, (o) => o.total)
   const outstanding = sum(
@@ -172,24 +160,20 @@ export async function getDashboardOverview(range: RangeKey): Promise<OverviewDat
     (o) => o.total,
   )
 
-  // ── Fulfillment speed — completed tickets only ──
   const completed = live.filter((o) => o.status === "COMPLETED")
   const avgFulfillmentMinutes = completed.length
     ? sum(completed, (o) => (o.updatedAt.getTime() - o.createdAt.getTime()) / 60000) /
       completed.length
     : null
 
-  // ── Trend buckets ──
   const trend = buildTrend(live, r)
   const previousTrend = buildComparison(prevLive, r, trend.length)
   const channelTrend = buildChannelTrend(live, r)
 
-  // Only channels that actually traded get a band in the stacked chart.
   const channelKeys = Object.keys(ORDER_TYPE_LABELS).filter((type) =>
     channelTrend.some((point) => (point.values[type] ?? 0) > 0),
   )
 
-  // ── Hour-of-day profile (across the whole window) ──
   const hourly = Array.from({ length: 24 }, (_, hour) => ({
     hour,
     orders: 0,
@@ -205,7 +189,6 @@ export async function getDashboardOverview(range: RangeKey): Promise<OverviewDat
     0,
   )
 
-  // ── Splits ──
   const orderTypes = groupSlices(live, (o) => o.type, ORDER_TYPE_LABELS, revenue)
   const payments = groupSlices(live, (o) => o.paymentMethod, PAYMENT_LABELS, revenue)
 
@@ -219,7 +202,6 @@ export async function getDashboardOverview(range: RangeKey): Promise<OverviewDat
     deliveryRevenue,
   )
 
-  // ── Customers ──
   const customers = await buildCustomerInsights(restaurantId, live, r.start)
 
   return {
@@ -266,8 +248,6 @@ export async function getDashboardOverview(range: RangeKey): Promise<OverviewDat
     hasData: current.length > 0,
   }
 }
-
-// ─── Menu performance ─────────────────────────────────
 
 export async function getMenuPerformance(range: RangeKey): Promise<MenuPerformance | null> {
   const session = await auth()
@@ -327,7 +307,6 @@ export async function getMenuPerformance(range: RangeKey): Promise<MenuPerforman
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 8)
 
-  // ── Revenue per category ──
   const categoryTotals = new Map<string, { orders: number; revenue: number }>()
   for (const s of sold) {
     const name = byId.get(s.menuItemId)?.category.name ?? "Uncategorised"
@@ -347,7 +326,6 @@ export async function getMenuPerformance(range: RangeKey): Promise<MenuPerforman
     }))
     .sort((a, b) => b.revenue - a.revenue)
 
-  // ── Menu health ──
   const soldIds = new Set(sold.map((s) => s.menuItemId))
   const noSale = menuItems.filter((m) => !soldIds.has(m.id))
   const unavailable = menuItems.filter((m) => !m.isAvailable)
@@ -375,8 +353,6 @@ export async function getMenuPerformance(range: RangeKey): Promise<MenuPerforman
   }
 }
 
-// ─── Internal helpers ─────────────────────────────────
-
 type OrderRow = {
   createdAt: Date
   total: number
@@ -388,11 +364,6 @@ function sum<T>(rows: T[], pick: (row: T) => number) {
   return rows.reduce((acc, row) => acc + (pick(row) || 0), 0)
 }
 
-/**
- * The shared x-axis. The trend line, its comparison line and the channel
- * split are all plotted against the same buckets, so they must agree on
- * how a timestamp maps to a slot — hence one definition, three consumers.
- */
 function bucketPlan(r: ResolvedRange, anchor: Date = r.start) {
   if (r.granularity === "hour") {
     return {
@@ -430,10 +401,6 @@ function buildTrend(orders: { createdAt: Date; total: number }[], r: ResolvedRan
   return buckets
 }
 
-/**
- * The previous window bucketed onto the *current* window's slots, so index
- * n of both arrays describes the same point in each period.
- */
 function buildComparison(
   orders: { createdAt: Date; total: number }[],
   r: ResolvedRange,
@@ -536,7 +503,6 @@ async function buildCustomerInsights(
   const phones = [...byPhone.keys()]
   let returningPhones = new Set<string>()
 
-  // A customer counts as "returning" if they ordered before this window too.
   if (phones.length > 0) {
     const prior = await prisma.order.groupBy({
       by: ["customerPhone"],
@@ -549,7 +515,6 @@ async function buildCustomerInsights(
     returningPhones = new Set(prior.map((p) => p.customerPhone))
   }
 
-  // Ordering more than once inside the window also counts as repeat behaviour.
   for (const [phone, c] of byPhone) {
     if (c.orders > 1) returningPhones.add(phone)
   }

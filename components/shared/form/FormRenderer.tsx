@@ -4,7 +4,6 @@ import { Control } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { FieldConfig } from "./field-config.types";
 
-// shadcn/ui + your project's field components
 import {
   Field,
   FieldLabel,
@@ -23,7 +22,6 @@ import {
 } from "@/components/ui/select";
 import MultiSelectField from "./MultiSelect";
 
-// for date picker field
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -41,17 +39,6 @@ interface FormRendererProps {
   className?: string;
 }
 
-// ─────────────────────────────────────────────────────────────
-// FormRenderer
-//
-// Receives a fields config array + RHF control object.
-// Renders the correct shadcn field component for each type.
-// Handles label, description, error display automatically.
-//
-// Usage:
-//   <FormRenderer fields={categoryFields} control={form.control} />
-// ─────────────────────────────────────────────────────────────
-
 export function FormRenderer({
   fields,
   control,
@@ -65,7 +52,6 @@ export function FormRenderer({
           name={field.name}
           control={control}
           render={({ field: f, fieldState }) => {
-            // ── Select ──────────────────────────────────────
             if (field.type === "select") {
               return (
                 <Field data-invalid={fieldState.invalid}>
@@ -103,7 +89,6 @@ export function FormRenderer({
               );
             }
 
-            // ── Textarea ────────────────────────────────────
             if (field.type === "textarea") {
               return (
                 <Field
@@ -128,7 +113,6 @@ export function FormRenderer({
               );
             }
 
-            // ── Switch ──────────────────────────────────────
             if (field.type === "switch") {
               return (
                 <Field
@@ -155,7 +139,6 @@ export function FormRenderer({
               );
             }
 
-            // ── Date ────────────────────────────────────────
             if (field.type === "date") {
               return (
                 <Field data-invalid={fieldState.invalid}>
@@ -199,7 +182,6 @@ export function FormRenderer({
               );
             }
 
-            // ── Multi-select ────────────────────────────────
             if (field.type === "multi-select") {
               return (
                 <Field data-invalid={fieldState.invalid} className={field.className}>
@@ -219,7 +201,6 @@ export function FormRenderer({
               );
             }
 
-            // ── Text / Number / Email (default) ─────────────
             return (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={f.name}>{field.label}</FieldLabel>
@@ -231,7 +212,6 @@ export function FormRenderer({
                     "placeholder" in field ? field.placeholder : undefined
                   }
                   aria-invalid={fieldState.invalid}
-                  // Convert string → number for number inputs so Zod gets the right type
                   onChange={(e) =>
                     f.onChange(
                       field.type === "number"

@@ -30,7 +30,6 @@ export default function DashboardPage({
 }: {
   searchParams: SearchParams
 }) {
-  // Every section reads its own data so slow queries never block the rest.
   return (
     <div className="space-y-8 pb-4">
       <Suspense fallback={<HeaderSkeleton />}>
@@ -47,8 +46,6 @@ export default function DashboardPage({
     </div>
   )
 }
-
-// ─── Sections ─────────────────────────────────────────
 
 async function HeaderSection({ searchParams }: { searchParams: SearchParams }) {
   const range = parseRange((await searchParams).range)
@@ -76,7 +73,6 @@ async function PerformanceSection({
   const showDeliveryZones = data.deliveryAreas.length > 0
   const period = `${data.rangeLabel} · ${data.comparisonLabel}`
 
-  // Sales and Customers share one query, so they render from one section.
   return (
     <div className="space-y-8">
       <KpiCards data={data} />

@@ -87,7 +87,6 @@ const DiscountClient = ({ discounts, categories, products }: discountProps) => {
         searchKey="name"
         searchPlaceholder="Search Discounts..."
       />
-      {/* Create / Edit Form Modal */}
       <AppModal
         open={modalOpen}
         onClose={handleClose}

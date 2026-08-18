@@ -24,7 +24,6 @@ export default function CustomerInsights({ data }: { data: OverviewData }) {
         />
       ) : (
         <div className="p-5 space-y-6">
-          {/* ── New vs returning ── */}
           <div>
             <div className="flex items-baseline justify-between mb-3">
               <span className="text-2xl font-semibold text-title tracking-tight tabular-nums">
@@ -58,7 +57,6 @@ export default function CustomerInsights({ data }: { data: OverviewData }) {
             </div>
           </div>
 
-          {/* ── Top spenders ── */}
           <div className="pt-5 border-t border-border">
             <MicroLabel className="mb-4">Top spenders</MicroLabel>
 

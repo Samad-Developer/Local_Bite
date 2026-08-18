@@ -8,7 +8,6 @@ export async function GET(
   try {
     const { restaurantId } = await params
 
-    // fetch categories and delivery areas in parallel
     const [categories, deliveryAreas] = await Promise.all([
       prisma.category.findMany({
         where: {
@@ -107,7 +106,6 @@ export async function GET(
         }
       }),
 
-      // fetch active delivery areas
       prisma.deliveryArea.findMany({
         where: {
           restaurantId,
@@ -122,7 +120,6 @@ export async function GET(
       })
     ])
 
-    // process categories
     const result = categories.map((category) => ({
       id: category.id,
       name: category.name,

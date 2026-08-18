@@ -5,7 +5,6 @@ import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
 import { OrderStatus } from "@prisma/client"
 
-// Get all orders for this restaurant
 export async function getOrders({
   status,
   search,
@@ -40,14 +39,10 @@ export async function getOrders({
   })
 }
 
-// Get single order detail
 export async function getOrderById(id: string) {
   const session = await auth()
   if (!session) return null
 
-  // findFirst, not findUnique: findUnique only filters on unique fields, so
-  // the restaurant scope below would be rejected. The scope is what stops an
-  // id from another tenant being read by guessing the URL.
   return await prisma.order.findFirst({
     where: { id, restaurantId: session.user.restaurantId },
     include: {
@@ -68,18 +63,14 @@ export async function getOrderById(id: string) {
   })
 }
 
-/** The exact shape `getOrderById` resolves to, for the detail view. */
 export type OrderDetail = NonNullable<
   Awaited<ReturnType<typeof getOrderById>>
 >
 
-// Update order status
 export async function updateOrderStatus(id: string, status: OrderStatus) {
   const session = await auth()
   if (!session) return { error: "Not authenticated" }
 
-  // updateMany, not update: it takes a non-unique where, so the restaurant
-  // scope is enforced in the query itself rather than trusting the id.
   const { count } = await prisma.order.updateMany({
     where: { id, restaurantId: session.user.restaurantId },
     data: { status }

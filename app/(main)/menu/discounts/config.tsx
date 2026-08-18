@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Pencil } from "lucide-react";
 import { format } from "date-fns";
 
-// --- Discount Type --------------------------------------------------------------------
-
 export type DiscountItem = {
   id: string;
   discountId: string;
@@ -28,8 +26,6 @@ export type Discount = {
   items: DiscountItem[];
 };
 
-// --- Discount Schema ------------------------------------------------------------------
-
 export const discountSchema = z.object({
   name: z.string().min(3, "Discount name is Required").max(40, "Name too long"),
   type: z.enum(["PERCENTAGE", "FIXED"]),
@@ -43,8 +39,6 @@ export const discountSchema = z.object({
 
 export type DiscountFormData = z.infer<typeof discountSchema>;
 
-// --- Default values for Discount Form --------------------------------------------------
-
 export const discountFormDefaultValues: DiscountFormData = {
   name: "",
   type: "PERCENTAGE",
@@ -55,8 +49,6 @@ export const discountFormDefaultValues: DiscountFormData = {
   productIds: [],
   categoryIds: [],
 };
-
-// --- Discount Form Fields Config ---------------------------------------------------------
 
 export const discountFields = (
   products: { id: string; name: string }[],
@@ -126,8 +118,6 @@ export const discountFields = (
   
 ];
 
-
-// ---- Discount Table Columns ----------------------------------
 
 export const discountTableColumns = (
   onEdit: (row: Discount) => void,

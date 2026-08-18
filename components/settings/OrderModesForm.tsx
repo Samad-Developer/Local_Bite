@@ -11,8 +11,6 @@ import { SettingsSubmitButton } from "./SettingsSubmitButton";
 import { updateOrderModes } from "@/lib/actions/restaurant/settings";
 import { toast } from "sonner";
 
-//  ----- Schema ----------------------
-
 const orderModeSchema = z.object({
   dineIn: z.boolean(),
   takeaway: z.boolean(),
@@ -23,11 +21,6 @@ const orderModeSchema = z.object({
 });
 
 type orderModesFormValues = z.infer<typeof orderModeSchema>;
-
-// ------ Form fields -----------------------
-// Grouped rather than flat: the switches want a divided list and the
-// numbers want a grid, and FormRenderer lays out one array with one
-// className. Field order within each group matches the original array.
 
 const channelFields: FieldConfig[] = [
   {
@@ -74,8 +67,6 @@ const deliveryRuleFields: FieldConfig[] = [
   },
 ];
 
-//  -----------------------------------------------------
-
 const OrderModesForm = ({
   restaurant,
 }: {
@@ -101,8 +92,6 @@ const OrderModesForm = ({
     values?.delivery,
   ].filter(Boolean).length;
 
-  // Same rule as before: the delivery-only numbers drop out when delivery
-  // is off, while the minimum order stays put.
   const visibleRuleFields = isDeliveryEnabled
     ? [...orderRuleFields, ...deliveryRuleFields]
     : orderRuleFields;
@@ -113,13 +102,11 @@ const OrderModesForm = ({
 
       if (response?.success) {
         toast.success(response.message ?? "Order modes updated successfully.");
-        // update the form state to match the saved values
         form.reset(data);
       } else {
         toast.error(response?.message ?? "Failed to update ordermodes.");
       }
     } catch (error) {
-      // log and show a generic error message for unexpected failures
       console.error("Failed to update order modes", error);
       toast.error("An unexpected error occurred. Please try again.");
     }
@@ -140,9 +127,6 @@ const OrderModesForm = ({
           </span>
         }
       >
-        {/* Row treatment comes from the wrapper — FormRenderer emits one
-            [data-slot=field] per entry, so dividers and padding are applied
-            without the renderer needing to know about them. */}
         <FormRenderer
           fields={channelFields}
           control={control}

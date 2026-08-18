@@ -1,10 +1,5 @@
 "use client";
 
-/**
- * Card shell shared by the settings forms — hairline border, no shadow,
- * a titled header and a content well. Pass `contentClassName` when the
- * body supplies its own padding (a divided list, for example).
- */
 export function SettingsSection({
   title,
   description,

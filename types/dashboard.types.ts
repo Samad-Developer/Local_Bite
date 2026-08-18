@@ -1,7 +1,3 @@
-// ─── Dashboard shared types ───────────────────────────
-// Kept outside the "use server" module so they can be imported
-// by both server and client components.
-
 export type RangeKey = "today" | "7d" | "30d" | "90d"
 
 export const RANGE_OPTIONS: { value: RangeKey; label: string; hint: string }[] = [
@@ -24,18 +20,15 @@ export type TrendPoint = {
   orders: number
 }
 
-/** Same buckets as `trend`, but for the comparison window. */
 export type ComparisonPoint = {
   revenue: number
   orders: number
 }
 
-/** Revenue split by order type, bucketed on the same axis as `trend`. */
 export type ChannelTrendPoint = {
   key: string
   label: string
   total: number
-  /** Order type → revenue in this bucket. */
   values: Record<string, number>
 }
 
@@ -125,4 +118,3 @@ export type MenuPerformance = {
   hiddenCategories: number
   activeDiscounts: number
 }
-

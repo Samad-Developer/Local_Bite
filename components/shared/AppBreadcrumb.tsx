@@ -10,7 +10,7 @@ import { Fragment } from "react"
 
 interface BreadcrumbItem {
   label: string
-  href?: string  // if no href → renders as current page (not clickable)
+  href?: string
 }
 
 interface AppBreadcrumbProps {
@@ -29,12 +29,10 @@ export default function AppBreadcrumb({ items }: AppBreadcrumbProps) {
 
               <BreadcrumbItem>
                 {isLast || !item.href ? (
-                  // last item or no href → current page (not clickable)
                   <BreadcrumbPage className="text-[#111111] font-medium text-sm">
                     {item.label}
                   </BreadcrumbPage>
                 ) : (
-                  // has href → clickable link
                   <BreadcrumbLink
                     href={item.href}
                     className="text-[#6b7280] hover:text-[#111111] text-sm transition-colors"
@@ -44,7 +42,6 @@ export default function AppBreadcrumb({ items }: AppBreadcrumbProps) {
                 )}
               </BreadcrumbItem>
 
-              {/* separator between items — not after last */}
               {!isLast && (
                 <BreadcrumbSeparator className="" />
               )}

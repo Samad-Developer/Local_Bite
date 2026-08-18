@@ -13,8 +13,6 @@ import { SettingsSection } from "./SettingsSection";
 import { SettingsSubmitButton } from "./SettingsSubmitButton";
 import { updateSettings } from "@/lib/actions/restaurant/settings";
 
-// ----- Types ----------------------------
-
 export type RestaurantBasicInfo = Pick<
   RestaurantSettingsType,
   "name" | "address" | "phone" | "city" | "logoUrl" | "coverImages" | "id"
@@ -23,8 +21,6 @@ export type RestaurantBasicInfo = Pick<
 interface RestaurantInfoProps {
   restaurant: RestaurantBasicInfo;
 }
-
-// ----- Schema -----------------------------------
 
 const restaurantInfoSchema = z.object({
   name: z.string(),
@@ -36,11 +32,6 @@ const restaurantInfoSchema = z.object({
 });
 
 type RestaurantInfoFormValues = z.infer<typeof restaurantInfoSchema>;
-
-// ------ Config Start -------------------------
-// Split into rows rather than one flat array: FormRenderer lays its fields
-// out with a single className, so separate calls are how each row gets its
-// own column count without the renderer needing to know about spans.
 
 const identityFields: FieldConfig[] = [
   {
@@ -78,8 +69,6 @@ const addressFields: FieldConfig[] = [
   },
 ];
 
-// ------ Config End -------------------------
-
 const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
   const form = useForm<RestaurantInfoFormValues>({
     resolver: zodResolver(restaurantInfoSchema),
@@ -115,7 +104,6 @@ const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-      {/* ── Details ── */}
       <SettingsSection
         title="Restaurant details"
         description="The basics customers see when they find you."
@@ -138,7 +126,6 @@ const RestaurantInfoForm = ({ restaurant }: RestaurantInfoProps) => {
         />
       </SettingsSection>
 
-      {/* ── Branding ── */}
       <SettingsSection
         title="Logo & banner images"
         description="Your visual identity on the storefront."

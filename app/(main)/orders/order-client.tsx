@@ -14,6 +14,7 @@ export default function OrdersRealtime({
   initialOrders: Order[]
 }) {
   const [orders, setOrders] = useState<Order[]>(initialOrders)
+  console.log("Checking Orders", orders)
   const [statusFilter, setStatusFilter] = useState<string>("")
 
   const { lastOrderChange, clearLastOrderChange } = useOrderNotification()

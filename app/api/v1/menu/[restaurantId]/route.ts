@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
+import { activeDiscountWhere, computeFinalPrice, resolveActiveDiscount } from "@/lib/utils/pricing"
 
 export async function GET(
   request: Request,
@@ -7,6 +8,7 @@ export async function GET(
 ) {
   try {
     const { restaurantId } = await params
+    const now = new Date()
 
     const [categories, deliveryAreas] = await Promise.all([
       prisma.category.findMany({
@@ -70,25 +72,7 @@ export async function GET(
                 }
               },
               discounts: {
-                where: {
-                  discount: {
-                    isActive: true,
-                    AND: [
-                      {
-                        OR: [
-                          { startDate: null },
-                          { startDate: { lte: new Date() } }
-                        ]
-                      },
-                      {
-                        OR: [
-                          { endDate: null },
-                          { endDate: { gte: new Date() } }
-                        ]
-                      }
-                    ]
-                  }
-                },
+                where: activeDiscountWhere(now),
                 take: 1,
                 select: {
                   discount: {
@@ -125,7 +109,7 @@ export async function GET(
       name: category.name,
       sortOrder: category.sortOrder,
       menuItems: category.menuItems.map((item) => {
-        const activeDiscount = item.discounts[0]?.discount ?? null
+        const activeDiscount = resolveActiveDiscount(item.discounts)
 
         const variants = item.variants.map((variant) => ({
           ...variant,
@@ -165,16 +149,3 @@ export async function GET(
   }
 }
 
-function computeFinalPrice(
-  price: number,
-  discount: { type: string; value: number } | null
-): number {
-  if (!discount) return price
-  if (discount.type === "PERCENTAGE") {
-    return Math.max(0, price - (price * discount.value) / 100)
-  }
-  if (discount.type === "FIXED") {
-    return Math.max(0, price - discount.value)
-  }
-  return price
-}

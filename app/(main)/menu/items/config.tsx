@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, UtensilsCrossed } from "lucide-react";
 import { FieldConfig } from "@/components/shared/form/field-config.types";
-import { computeFinalPrice } from "@/lib/utils/pricing";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Route } from "next";
